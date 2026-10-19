@@ -98,7 +98,7 @@
   .stat-card.points .num{color:var(--gold);}
   .stat-card.streak .num{color:var(--mint);}
   .points-breakdown{
-    display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:8px;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px;
   }
   .points-breakdown .point-box{
     background:var(--surface); border:1px solid var(--border);
@@ -296,47 +296,7 @@
   .exam-record .record-subject{font-weight:700;}
   .exam-record .record-meta{font-size:11px; color:var(--muted); margin-top:2px;}
   .exam-record .record-score{font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-weight:800; color:var(--mint);}
-
-  .attendance-note{
-    color:var(--muted); font-size:12px; line-height:1.8;
-    background:rgba(245,185,66,.07); border:1px solid rgba(245,185,66,.25);
-    border-radius:12px; padding:11px 13px; margin-bottom:14px;
-  }
-  .schedule-row{
-    display:grid; grid-template-columns:1fr 1.2fr .9fr; gap:8px;
-    margin-bottom:8px;
-  }
-  .schedule-row input,.schedule-row select{
-    width:100%; min-width:0; background:var(--surface-2);
-    border:1px solid var(--border); color:var(--text); border-radius:9px;
-    padding:9px 8px; font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-size:12px;
-  }
   .schedule-row input[type=time]{font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif;}
-  .attendance-save{
-    width:100%; margin-top:4px; padding:10px; border:none; border-radius:10px;
-    background:var(--surface-2); color:var(--mint); border:1px solid var(--mint-dim);
-    font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-weight:800; font-size:13px; cursor:pointer;
-  }
-  .attendance-item{
-    display:flex; align-items:center; gap:10px; padding:12px 2px;
-    border-bottom:1px solid var(--border);
-  }
-  .attendance-item:last-child{border-bottom:none;}
-  .attendance-info{flex:1; min-width:0;}
-  .attendance-subject{font-weight:800; font-size:14px;}
-  .attendance-meta{font-size:11px; color:var(--muted); margin-top:3px;}
-  .attendance-status{
-    font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-size:11px; font-weight:800;
-    padding:5px 8px; border-radius:7px; white-space:nowrap;
-  }
-  .attendance-status.pending{color:var(--gold); background:rgba(245,185,66,.12);}
-  .attendance-status.present{color:var(--mint); background:rgba(44,103,197,.12);}
-  .attendance-status.absent{color:var(--red); background:rgba(255,92,92,.12);}
-  .attendance-action{
-    border:1px solid var(--mint-dim); color:var(--mint); background:transparent;
-    border-radius:8px; padding:7px 9px; font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-size:11px;
-    font-weight:700; cursor:pointer; white-space:nowrap;
-  }
   .record-actions{display:flex; gap:4px; flex-shrink:0;}
   .icon-btn{
     background:transparent; border:1px solid var(--border); color:var(--muted);
@@ -354,14 +314,6 @@
     width:100%; background:var(--surface-2); border:1px solid var(--border); color:var(--text);
     border-radius:10px; padding:9px 11px; font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-size:13px; margin-bottom:10px;
   }
-  .attendance-status-select{
-    font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-size:11px; font-weight:800;
-    padding:5px 8px; border-radius:7px; white-space:nowrap; border:1px solid var(--border);
-    background:var(--surface-2); cursor:pointer;
-  }
-  .attendance-status-select.pending{color:var(--gold);}
-  .attendance-status-select.present{color:var(--mint);}
-  .attendance-status-select.absent{color:var(--red);}
   .stats-nav{
     display:flex; align-items:center; justify-content:center; gap:14px; margin:6px 0 6px;
   }
@@ -520,10 +472,6 @@
   @media (max-width:520px){
     .form-grid{grid-template-columns:1fr;}
     .field.full{grid-column:auto;}
-    .schedule-row{grid-template-columns:1fr 1.25fr 1fr;}
-    .points-breakdown{grid-template-columns:repeat(2,1fr);}
-    .subject-breakdown{grid-template-columns:repeat(2,1fr);}
-  }
 </style>
 </head>
 <body>
@@ -678,68 +626,13 @@
   <div id="errorSubjectBreakdown" class="exam-form"></div>
 </section>
 
-<!-- PAGE: STATS -->
-<section class="wrap page" id="page-attendance">
-  <div class="section-head"><h2>الغيابات والحضور</h2></div>
-  <div class="attendance-note">
-    ظبّط ٦ مواعيد أسبوعية للدرس. بعد ميعاد الدرس عندك ٨ ساعات تسجّل حضورك؛ بعدها يتحسب غياب تلقائي. ولأي أسبوع قديم استخدم تسجيل التاريخ المحدد فوق.
-  </div>
-  <div class="exam-form">
-    <h3>تسجيل حضور بتاريخ محدد</h3>
-    <div class="form-grid">
-      <div class="field">
-        <label for="attendanceDate">تاريخ الدرس</label>
-        <input id="attendanceDate" type="date" max="9999-12-31">
-      </div>
-      <div class="field">
-        <label for="attendanceStatusInput">الحالة</label>
-        <select id="attendanceStatusInput">
-          <option value="present">حاضر</option>
-          <option value="absent">غياب</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="attendanceSubjectInput">المادة</label>
-        <select id="attendanceSubjectInput"></select>
-      </div>
-      <div class="field">
-        <label for="attendanceTimeInput">ميعاد الدرس</label>
-        <input id="attendanceTimeInput" type="time">
-      </div>
-    </div>
-    <button class="attendance-save" type="button" onclick="addAttendanceRecord()">حفظ التسجيل بالتاريخ</button>
-  </div>
-  <div class="exam-form">
-    <h3>جدول دروس الأسبوع</h3>
-    <div id="attendanceScheduleForm"></div>
-    <button class="attendance-save" type="button" onclick="saveAttendanceSchedule()">💾 احفظ جدول الأسبوع</button>
-    <div id="attendanceSaveStatus" style="display:none; color:var(--mint); font-size:12px; text-align:center; margin-top:8px;">اتحفظ جدول الدروس ✅</div>
-  </div>
-
-  <div class="exam-section-title">
-    <h3>دروس الأسبوع الحالي</h3>
-    <span>غيّر الحالة من القايمة بعد ما الدرس يخلص</span>
-  </div>
-  <div id="attendanceList" class="exam-form"></div>
-  <div class="exam-section-title">
-    <h3>سجل الحضور والغياب بالكامل</h3>
-    <span>مرتب بالتاريخ</span>
-  </div>
-  <div class="stats-nav">
-    <button type="button" id="attHistoryPrevBtn" onclick="shiftAttendanceHistory(-1)">السابق</button>
-    <span class="range-label" id="attHistoryLabel"></span>
-    <button type="button" id="attHistoryNextBtn" onclick="shiftAttendanceHistory(1)">التالي</button>
-  </div>
-  <div id="attendanceHistoryList" class="exam-form"></div>
-</section>
-
 
 <!-- PAGE: ACHIEVEMENTS -->
 <section class="wrap page" id="page-achievements">
   <div class="section-head"><h2>الإنجازات</h2></div>
   <div class="achievement-summary">
     <div class="achievement-stat"><div class="num" id="achievementUnlockedCount">0</div><div class="lbl">مفتوح</div></div>
-    <div class="achievement-stat"><div class="num" id="achievementTotalCount">162</div><div class="lbl">الإجمالي</div></div>
+    <div class="achievement-stat"><div class="num" id="achievementTotalCount">152</div><div class="lbl">الإجمالي</div></div>
     <div class="achievement-stat"><div class="num" id="achievementPct">0%</div><div class="lbl">نسبة الإنجاز</div></div>
   </div>
   <div class="achievement-filters" id="achievementFilters"></div>
@@ -766,7 +659,7 @@
 
   <div class="prediction-card">
     <div class="prediction-head">
-      <div><h3>📈 توقع النتيجة النهائية</h3><p>توقع ديناميكي مبني على نتائجك الفعلية، مع وزن أكبر للشوامل، واتجاه المستوى، والحضور.</p></div>
+      <div><h3>📈 توقع النتيجة النهائية</h3><p>توقع ديناميكي مبني على نتائجك الفعلية، مع وزن أكبر للشوامل واتجاه مستواك.</p></div>
       <div class="prediction-status" id="predictionStatus">جاري التحليل…</div>
     </div>
     <div class="prediction-overall">
@@ -800,7 +693,6 @@
   <div class="points-breakdown">
     <div class="point-box"><div class="point-value" id="taskPointsTotal">0</div><div class="point-label">المهمات</div></div>
     <div class="point-box"><div class="point-value" id="examPointsTotal">0</div><div class="point-label">الامتحانات</div></div>
-    <div class="point-box"><div class="point-value" id="attendancePointsTotal">0</div><div class="point-label">الحضور والغياب</div></div>
     <div class="point-box"><div class="point-value" id="streakPointsTotal">0</div><div class="point-label">استريك الامتحانات</div></div>
   </div>
   <div id="chartWrap" class="chart"></div>
@@ -853,7 +745,6 @@
   <button data-page="today" onclick="showPage('today')">📋 النهاردة</button>
   <button data-page="exams" onclick="showPage('exams')">📝 الامتحانات</button>
   <button data-page="errors" onclick="showPage('errors')">🧠 الأخطاء</button>
-  <button data-page="attendance" onclick="showPage('attendance')">📅 الحضور</button>
   <button data-page="stats" onclick="showPage('stats')">📊 الإحصائيات</button>
   <button data-page="achievements" onclick="showPage('achievements')">🏆 الإنجازات</button>
   <button data-page="ranks" onclick="showPage('ranks')">🎖️ الرتب</button>
@@ -863,7 +754,7 @@
 /* ---------- DATA ---------- */
 const STORE_KEY = 'atnaffez_data_v1';
 const LAST_MESSAGE_KEY = 'atnaffez_last_message_v1';
-// v2 clears any stale pending message created before the attendance-week fix.
+// Persistent notification queue for Ghayah achievement messages.
 const PENDING_TOAST_KEY = 'atnaffez_pending_toast_v2';
 function todayStr(d=new Date()){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -872,11 +763,9 @@ function defaultData(){
   return {
     points:0, streak:0, lastEvaluatedDate:null,
     tasksByDay:{}, historyByDay:{}, exams:[],
-    attendanceSchedule:[], attendanceInstances:[],
     examErrors:[],
-    pointTotals:{tasks:0, exams:0, attendance:0, streaks:0, achievements:0},
+    pointTotals:{tasks:0, exams:0, streaks:0, achievements:0},
     examStreak:{high:0, low:0},
-    attendanceStreak:0,
     achievementsUnlocked:[],
     expectedOverall:null,
     expectedBySubject:{},
@@ -892,20 +781,17 @@ function sanitizeData(parsed){
   if(!parsed.tasksByDay || typeof parsed.tasksByDay !== 'object') parsed.tasksByDay = {};
   if(!parsed.historyByDay || typeof parsed.historyByDay !== 'object') parsed.historyByDay = {};
   if(!Array.isArray(parsed.exams)) parsed.exams = [];
-  if(!Array.isArray(parsed.attendanceSchedule)) parsed.attendanceSchedule = [];
-  if(!Array.isArray(parsed.attendanceInstances)) parsed.attendanceInstances = [];
   if(!Array.isArray(parsed.examErrors)) parsed.examErrors = [];
   if(!parsed.pointTotals || typeof parsed.pointTotals !== 'object'){
-    parsed.pointTotals = {tasks:Number(parsed.points)||0, exams:0, attendance:0, streaks:0, achievements:0};
+    parsed.pointTotals = {tasks:Number(parsed.points)||0, exams:0, streaks:0, achievements:0};
   }
-  ['tasks','exams','attendance','streaks','achievements'].forEach(key=>{
+  ['tasks','exams','streaks','achievements'].forEach(key=>{
     if(!Number.isFinite(Number(parsed.pointTotals[key]))) parsed.pointTotals[key] = 0;
     else parsed.pointTotals[key] = Number(parsed.pointTotals[key]);
   });
   if(!parsed.examStreak || typeof parsed.examStreak !== 'object') parsed.examStreak = {high:0, low:0};
   if(!Number.isFinite(Number(parsed.examStreak.high))) parsed.examStreak.high = 0;
   if(!Number.isFinite(Number(parsed.examStreak.low))) parsed.examStreak.low = 0;
-  if(!Number.isFinite(Number(parsed.attendanceStreak))) parsed.attendanceStreak = 0;
   if(!Array.isArray(parsed.achievementsUnlocked)) parsed.achievementsUnlocked = [];
   parsed.achievementsUnlocked = [...new Set(parsed.achievementsUnlocked.map(Number).filter(Number.isFinite))];
   if(parsed.expectedOverall !== null && !Number.isFinite(Number(parsed.expectedOverall))) parsed.expectedOverall = null;
@@ -943,6 +829,22 @@ function saveData(){
 }
 
 let data = loadData();
+// Attendance was removed from Ghayah. Clear its legacy contribution without resetting any other progress.
+if(data.pointTotals && typeof data.pointTotals==='object') data.pointTotals.attendance=0; // discard legacy attendance points
+delete data.attendanceSchedule;
+delete data.attendanceInstances;
+delete data.attendanceStreak;
+if(data.achievementPointsAwarded && typeof data.achievementPointsAwarded==='object'){
+  for(let oldId=1;oldId<=10;oldId++){
+    const oldXp=Number(data.achievementPointsAwarded[String(oldId)])||0;
+    if(oldXp) data.pointTotals.achievements=Math.max(0,(Number(data.pointTotals.achievements)||0)-oldXp);
+    delete data.achievementPointsAwarded[String(oldId)];
+  }
+}
+if(Array.isArray(data.achievementsUnlocked)) data.achievementsUnlocked=data.achievementsUnlocked.filter(id=>Number(id)>10);
+if(Array.isArray(data.achievementNotificationQueue)) data.achievementNotificationQueue=data.achievementNotificationQueue.filter(item=>Number(item.id)>10);
+if(data.achievementMessagesDismissed && typeof data.achievementMessagesDismissed==='object'){ for(let oldId=1;oldId<=10;oldId++) delete data.achievementMessagesDismissed[String(oldId)]; }
+data.points=Number(data.pointTotals?.tasks||0)+Number(data.pointTotals?.exams||0)+Number(data.pointTotals?.streaks||0)+Number(data.pointTotals?.achievements||0);
 if(!Array.isArray(data.achievementNotificationQueue)) data.achievementNotificationQueue=[];
 if(!data.achievementMessagesDismissed || typeof data.achievementMessagesDismissed!=='object') data.achievementMessagesDismissed={};
 if(data.__achievementNotificationMigrationV1 !== true){
@@ -970,10 +872,9 @@ let examStatsPeriod = 'month';
 let examChartPeriod='month';
 let examChartMetric='all_subjects';
 const EXAM_CHART_METRICS=[['all_subjects','كل المواد'],['overall','الإجمالي'],['weekly_total','إجمالي الأسبوعي'],['comprehensive_total','إجمالي الشوامل'],['comprehensive:رياضيات','شامل رياضيات'],['comprehensive:فيزياء','شامل فيزياء'],['comprehensive:كيمياء','شامل كيمياء'],['comprehensive:عربي','شامل عربي'],['comprehensive:إنجليزي','شامل إنجليزي'],['weekly:رياضيات','أسبوعي رياضيات'],['weekly:فيزياء','أسبوعي فيزياء'],['weekly:كيمياء','أسبوعي كيمياء'],['weekly:عربي','أسبوعي عربي'],['weekly:إنجليزي','أسبوعي إنجليزي']];
-let attendanceHistoryAnchor = new Date();
 function addPoints(category, amount){
   if(!data.pointTotals || typeof data.pointTotals !== 'object'){
-    data.pointTotals = {tasks:0, exams:0, attendance:0, streaks:0, achievements:0};
+    data.pointTotals = {tasks:0, exams:0, streaks:0, achievements:0};
   }
   if(!Number.isFinite(Number(data.pointTotals[category]))) data.pointTotals[category] = 0;
   else data.pointTotals[category] = Number(data.pointTotals[category]);
@@ -985,20 +886,10 @@ function addPoints(category, amount){
 /* ---------- ACHIEVEMENT ENGINE ---------- */
 const ACHIEVEMENT_SUBJECTS = ['رياضيات','كيمياء','فيزياء','عربي','إنجليزي'];
 const ACHIEVEMENT_CATEGORIES = [
-  ['all','الكل'],['attendance','الحضور'],['رياضيات','رياضيات'],['كيمياء','كيمياء'],['فيزياء','فيزياء'],['عربي','عربي'],['إنجليزي','إنجليزي'],
+  ['all','الكل'],['رياضيات','رياضيات'],['كيمياء','كيمياء'],['فيزياء','فيزياء'],['عربي','عربي'],['إنجليزي','إنجليزي'],
   ['global_weekly','الأسبوعي العام'],['comprehensive','الشوامل'],['expected_overall','المعدل العام'],['expected_subject','معدلات المواد']
 ];
 const ACHIEVEMENTS = [
-  {id:1,cat:'attendance',type:'attendance_count',required:24,nameAr:'موعد الانضباط',nameEn:'Discipline Begins',condition:'24 حضور'},
-  {id:2,cat:'attendance',type:'attendance_count',required:48,nameAr:'ثبات الخطوة',nameEn:'Steady Stride',condition:'48 حضور'},
-  {id:3,cat:'attendance',type:'attendance_count',required:72,nameAr:'حارس الموعد',nameEn:'Keeper of Time',condition:'72 حضور'},
-  {id:4,cat:'attendance',type:'attendance_count',required:96,nameAr:'ركيزة الالتزام',nameEn:'Pillar of Commitment',condition:'96 حضور'},
-  {id:5,cat:'attendance',type:'attendance_count',required:120,nameAr:'درب الثبات',nameEn:'Path of Consistency',condition:'120 حضور'},
-  {id:6,cat:'attendance',type:'attendance_count',required:144,nameAr:'سيد الحضور',nameEn:'Master of Attendance',condition:'144 حضور'},
-  {id:7,cat:'attendance',type:'attendance_count',required:168,nameAr:'لا يتخلف',nameEn:'Never Absent',condition:'168 حضور'},
-  {id:8,cat:'attendance',type:'attendance_count',required:192,nameAr:'صخرة الالتزام',nameEn:'Rock of Dedication',condition:'192 حضور'},
-  {id:9,cat:'attendance',type:'attendance_count',required:216,nameAr:'حارس المسيرة',nameEn:'Guardian of the Journey',condition:'216 حضور'},
-  {id:10,cat:'attendance',type:'attendance_count',required:240,nameAr:'عشر شهور من الثبات',nameEn:'Ten Months Unbroken',condition:'240 حضور'},
   {id:11,cat:'رياضيات',type:'subject_weekly_score_count',subject:'رياضيات',score:80,required:10,nameAr:'بداية الإتقان',nameEn:'Dawn of Mastery',condition:'رياضيات — 80%+ في 10 امتحان أسبوعي'},
   {id:12,cat:'رياضيات',type:'subject_weekly_score_count',subject:'رياضيات',score:80,required:15,nameAr:'ثبات المعادلة',nameEn:'Equation of Consistency',condition:'رياضيات — 80%+ في 15 امتحان أسبوعي'},
   {id:13,cat:'رياضيات',type:'subject_weekly_score_count',subject:'رياضيات',score:80,required:20,nameAr:'صاحب الحل',nameEn:'Bearer of Solutions',condition:'رياضيات — 80%+ في 20 امتحان أسبوعي'},
@@ -1091,7 +982,7 @@ const ACHIEVEMENTS = [
   {id:100,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:80,required:35,nameAr:'متقن الإنجليزية',nameEn:'English Craftsman',condition:'إنجليزي — 80%+ في 35 امتحان أسبوعي'},
   {id:101,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:80,required:40,nameAr:'سيد اللغة الإنجليزية',nameEn:'Master of English',condition:'إنجليزي — 80%+ في 40 امتحان أسبوعي'},
   {id:102,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:10,nameAr:'أفق الطلاقة',nameEn:'Horizon of Fluency',condition:'إنجليزي — 90%+ في 10 امتحان أسبوعي'},
-  {id:103,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:15,nameAr:'حضور لغوي',nameEn:'Commanding Voice',condition:'إنجليزي — 90%+ في 15 امتحان أسبوعي'},
+  {id:103,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:15,nameAr:'صوت اللغة',nameEn:'Commanding Voice',condition:'إنجليزي — 90%+ في 15 امتحان أسبوعي'},
   {id:104,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:20,nameAr:'دقة التعبير',nameEn:'Precision in Expression',condition:'إنجليزي — 90%+ في 20 امتحان أسبوعي'},
   {id:105,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:25,nameAr:'صانع الطلاقة',nameEn:'Architect of Fluency',condition:'إنجليزي — 90%+ في 25 امتحان أسبوعي'},
   {id:106,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:30,nameAr:'سيد المفردات',nameEn:'Master of Vocabulary',condition:'إنجليزي — 90%+ في 30 امتحان أسبوعي'},
@@ -1320,7 +1211,6 @@ function achievementScoreCounts(){
   return {weekly,comprehensive,subjectCounts,global,comp};
 }
 function achievementCurrentValue(a, counts){
-  if(a.type==='attendance_count') return (Array.isArray(data.attendanceInstances)?data.attendanceInstances:[]).filter(x=>x.status==='present').length;
   if(a.type==='subject_weekly_score_count') return counts.subjectCounts[a.subject]?.[a.score] || 0;
   if(a.type==='global_weekly_score_count') return counts.global[a.score] || 0;
   if(a.type==='comprehensive_score_count') return counts.comp[a.score] || 0;
@@ -1332,16 +1222,6 @@ function achievementIsMet(a, value){
   return value!==null && Number.isFinite(Number(value)) && Number(value)>=Number(a.required);
 }
 const ACHIEVEMENT_MESSAGES = {
-  "1": "وصلت لـ24 حضور. الحضور عندك مبقاش مجرد التزام؛ بدأ يبقى عادة ثابتة بتحرس يومك.",
-  "2": "حققت 48 حضور. خطوة ورا خطوة، أثبت إنك تقدر تفضل موجود حتى لما الحماس يهدى.",
-  "3": "72 حضور اتحققت. الاستمرارية هنا هي الإنجاز الحقيقي، وأنت بتراكمها بهدوء.",
-  "4": "الرقم وصل لـ96 حضور. كل موعد حضرته كان بيزود صلابة النظام اللي بتبني بيه مستواك.",
-  "5": "مبروك 120 حضور. اللي يخلّي الإنجاز ده مهم إنك كررت الاختيار الصح بدل ما تعتمد على يوم مثالي.",
-  "6": "144 حضور كاملة. بقى عندك سجل التزام واضح، مش مجرد بداية حلوة.",
-  "7": "وصلت لـ168 حضور. المسافة بين محاولة ونجاح طويل هي الثبات، وأنت قطعت جزء كبير منها.",
-  "8": "192 حضور يا بطل. الموعد اللي كنت بتعتبره تفصيلة بقى دلوقتي دليل على قوة عادتك.",
-  "9": "حققت 216 حضور. كل حضور متراكم كان بيقول نفس الحاجة: أنت قادر تكمل حتى بعد ما الحماس يختفي.",
-  "10": "240 حضور. هنا الإنجاز مش في العدد لوحده؛ في إنك حافظت على الطريق لحد ما العدد بقى كبير بالشكل ده.",
   "11": "مبروك يا مازن: بداية الإتقان اتحقق في رياضيات. البداية دي معناها إن المستوى بدأ يثبت.",
   "12": "في رياضيات، 80%+ في 15 امتحان أسبوعي بقت حقيقة. كل امتحان قوي كان بيبني اللي بعده.",
   "13": "وصلت لـ80%+ في 20 امتحان أسبوعي في رياضيات. واضح إنك بقيت أهدى وأدق في التعامل مع المادة.",
@@ -1554,7 +1434,7 @@ function restoreAchievementNotifications(){
 function updateAchievements(){
   if(!Array.isArray(data.achievementsUnlocked)) data.achievementsUnlocked=[];
   if(!data.achievementPointsAwarded || typeof data.achievementPointsAwarded !== 'object') data.achievementPointsAwarded={};
-  if(!data.pointTotals || typeof data.pointTotals !== 'object') data.pointTotals={tasks:0,exams:0,attendance:0,streaks:0,achievements:0};
+  if(!data.pointTotals || typeof data.pointTotals !== 'object') data.pointTotals={tasks:0,exams:0,streaks:0,achievements:0};
   if(!Number.isFinite(Number(data.pointTotals.achievements))) data.pointTotals.achievements=0;
   if(!Array.isArray(data.achievementNotificationQueue)) data.achievementNotificationQueue=[];
   if(!data.achievementMessagesDismissed || typeof data.achievementMessagesDismissed !== 'object') data.achievementMessagesDismissed={};
@@ -1585,7 +1465,7 @@ function updateAchievements(){
     if(!previousUnlocked.has(Number(id))) queueAchievementNotification(Number(id),queuedIds);
   });
 
-  data.points=Number(data.pointTotals.tasks||0)+Number(data.pointTotals.exams||0)+Number(data.pointTotals.attendance||0)+Number(data.pointTotals.streaks||0)+Number(data.pointTotals.achievements||0);
+  data.points=Number(data.pointTotals.tasks||0)+Number(data.pointTotals.exams||0)+Number(data.pointTotals.streaks||0)+Number(data.pointTotals.achievements||0);
   showNextAchievementNotification();
 }
 
@@ -1600,7 +1480,6 @@ function achievementBadgeDataUri(a){
 
   // ---- per-category identity: each category has its own shape + palette ----
   const CATEGORY_STYLE={
-    attendance:       {shape:'shield',   palette:['#0c1517','#234145','#9bc2b5','#d6b85f','#ff8a5c']},
     'رياضيات':         {shape:'hexagon',  palette:['#0b1017','#263747','#9fb2c4','#d2aa55','#5cc8ff']},
     'كيمياء':          {shape:'diamond',  palette:['#0c1a12','#1f3d2c','#8fd9b0','#f4d35e','#5cffb0']},
     'فيزياء':          {shape:'starburst',palette:['#15101f','#35264b','#bda0dc','#e0bd68','#c792ea']},
@@ -1611,7 +1490,7 @@ function achievementBadgeDataUri(a){
     expected_overall: {shape:'laurel',   palette:['#120a1c','#2b1840','#c9a6f0','#ffd76b','#ffcf5c']},
     expected_subject: {shape:'plaque',   palette:['#17130b','#3d2d14','#d4b365','#f4df9b','#5c9bff']}
   };
-  const style=CATEGORY_STYLE[a.cat]||CATEGORY_STYLE.attendance;
+  const style=CATEGORY_STYLE[a.cat]||CATEGORY_STYLE['رياضيات'];
   const [bg,panel,metal,gold,gem]=style.palette;
 
   // ---- seeded PRNG so every single id gets its own unique inner emblem ----
@@ -1904,7 +1783,7 @@ function rankProgress(current,points){
   return {pct,label:`${points.toLocaleString('en-US')} / ${next.points.toLocaleString('en-US')} نقطة للرتبة التالية`};
 }
 /* ---------- RANK TRANSITION MESSAGES ----------
-   Isolated from the existing roast/motivation/attendance/exam messages.
+   Isolated from the existing roast/motivation/exam messages.
    These messages are triggered only when the calculated current rank changes. */
 const RANK_DEGRADE_ROASTS = [
   "إيه اللي إنت عملته ده يا خول؟ الرتبة نزلت. فوق لنفسك ولمّ اللي ضيعته.",
@@ -2134,7 +2013,7 @@ const EXAM_FEEDBACK = {
     "مقبولة كإنذار، مش كإنجاز. راجع أخطاءك وخلي الامتحان الجاي أعلى بوضوح.",
     "في أساس موجود، بس مستواك لسه مش ثابت. بطل تسيب درجات سهلة يا علق.",
     "النسبة دي تقول إنك بتحاول، لكنها تقول كمان إن المحاولة محتاجة نظام أقوى.",
-    "يا عرص، الطريق لهندسة محتاج قفزة في الالتزام، مش مجرد حضور وقت الامتحان.",
+    "يا عرص، الطريق لهندسة محتاج قفزة في الالتزام والمذاكرة اليومية، مش مجرد انتظار الامتحان.",
     "أنت قريب من التحسن، لكن بعيد عن المنافسة الحقيقية. زوّد حل وتدريب.",
     "الرقم ده ينفع نقطة بداية، مش نقطة وصول. متتعاملش معاه كأنه كفاية.",
     "لو راجعت أخطاءك بجد هتعلي، لو اكتفيت بالزعل هتفضل مكانك.",
@@ -2251,9 +2130,9 @@ function examPointsForScore(score){
 }
 function ensurePointTotals(){
   if(!data.pointTotals || typeof data.pointTotals !== 'object'){
-    data.pointTotals = {tasks:0, exams:0, attendance:0, streaks:0};
+    data.pointTotals = {tasks:0, exams:0, streaks:0};
   }
-  ['tasks','exams','attendance','streaks','achievements'].forEach(key=>{
+  ['tasks','exams','streaks','achievements'].forEach(key=>{
     if(!Number.isFinite(Number(data.pointTotals[key]))) data.pointTotals[key] = 0;
   });
 }
@@ -2289,100 +2168,13 @@ function recalculateRecordedPoints(){
     }
   });
 
-  let attendanceTotal = 0;
-  let attendanceStreak = 0;
-  const attendance = (Array.isArray(data.attendanceInstances) ? data.attendanceInstances : [])
-    .filter(instance=>instance.status==='present' || instance.status==='absent')
-    .slice()
-    .sort((a,b)=>(a.date || '').localeCompare(b.date || '') ||
-      (a.time || '').localeCompare(b.time || '') || (a.id || '').localeCompare(b.id || ''));
-
-  attendance.forEach(instance=>{
-    if(instance.status==='present'){
-      attendanceTotal += 2;
-      attendanceStreak = 0;
-    }else{
-      attendanceTotal -= 10;
-      attendanceStreak += 1;
-      if(attendanceStreak > 1) attendanceTotal -= 5;
-    }
-  });
-
   data.pointTotals.exams = examTotal;
   data.pointTotals.streaks = examStreakPoints;
-  data.pointTotals.attendance = attendanceTotal;
   if(!Number.isFinite(Number(data.pointTotals.achievements))) data.pointTotals.achievements = 0;
   data.examStreak = {high, low};
-  data.attendanceStreak = attendanceStreak;
-  data.points = Number(data.pointTotals.tasks) + examTotal + attendanceTotal + examStreakPoints + Number(data.pointTotals.achievements);
+  data.points = Number(data.pointTotals.tasks) + examTotal + examStreakPoints + Number(data.pointTotals.achievements);
 }
 recalculateRecordedPoints();
-const ATTENDANCE_ROASTS = [
-  "الدرس فات وإنت ما سجّلتش حضور. يا علق، كده بتضيّع شرح ممكن يقرّبك من هندسة.",
-  "٨ ساعات كاملة ومفيش تسجيل؟ يا عرص، الغياب ده اختيار منك مش مفاجأة.",
-  "يا متناك، حتى زرار الحضور سهلتهالك وبرضه سبت الدرس يعدّي. فوق لنفسك.",
-  "إيه المنَيكة دي؟ الدرس خلص وإنت لسه بتتفرج. كده الأوائل بيتقدموا وإنت بتتأخر.",
-  "يا خول، الغياب اتسجل لأنك ماعملتش أبسط خطوة. لمّ يومك قبل ما يتكرر.",
-  "عامل شرمطة مع جدولك ليه؟ درس ورا درس والنتيجة فجوة في مستواك.",
-  "يا شرموط، المدرس شرح وإنت سايب مكانك فاضي وبعدين مستغرب إن النسبة قليلة.",
-  "أحا، عندك ٨ ساعات تسجل حضور وماعرفتش؟ دي مش مشكلة تطبيق، دي مشكلة التزام.",
-  "يا ابن الكلب، كل غياب بيتراكم لحد ما تلاقي نفسك بتجري ورا المنهج.",
-  "الغياب اتحسب يا عرص. مش هتدخل هندسة بالنيات لو حضورك نفسه مهزوز.",
-  "يا خول يا متناك، الدرس كان في جدولك وإنت قررت تتعامل معاه كأنه اقتراح.",
-  "بطل منيكة مع مواعيدك؛ لو فضلت تنسى كده هتضيّع درجات سهلة جدًا.",
-  "يا عرص، ٨ ساعات مهلة مش معناها ٨ ساعات نوم. سجّل حضورك في وقته.",
-  "إنت عايز تبقى من الأوائل وبتسيب الدروس تختفي من غير أثر؟ فوق يا علق.",
-  "شرمطة تنظيمية كاملة: جدول موجود، درس موجود، وإنت الوحيد الغايب.",
-  "يا متناك، كل مرة تقول هسجل بعدين بتخلي الغياب ياخد القرار مكانك.",
-  "الدرس ده اتحوّل لغياب لأنك ماخدتش دقيقة تسجل. عيب في العادة، مش في قدراتك.",
-  "يا خول، لو مشيت بنفس الإهمال ده هتدخل الامتحان بمعلومات ناقصة وتلوم الحظ.",
-  "أحا على الاستهتار؛ حضور الدرس مش إنجاز خارق، لكنه أقل واجب عشان تلحق حلمك.",
-  "يا عرص، أنت مش محتاج تطبيق جديد؛ محتاج تبص على جدولك وتلتزم بيه.",
-  "الغياب ده إنذار واضح: يا تنظّم أسبوعك، يا تفضل تشرح لنفسك ليه مستواك ثابت.",
-  "يا ابن الجزمة، المدرس خلّص وإنت ما أثبتش حتى إنك كنت ناوي تحضر.",
-  "كفاية منيكة يا علق؛ الدرس اللي فات مش هيرجع، لكن تقدر تمنع اللي بعده.",
-  "يا شرموط، كل غياب بيخلّي الطريق لهندسة أطول شوية. اقفل باب الأعذار.",
-  "الوقت عدى يا متناك، والحضور ما اتسجلش. بطل تعتمد على ذاكرتك واعتمد على نظام.",
-  "يا خول، جدولك مش ديكور. لو حطيت ميعاد، يبقى احترمه.",
-  "غياب جديد بسبب تأجيل صغير. التأجيل ده لو اتكرر هيبقى عادة تضيّعك.",
-  "يا عرص، مش منطقي تطلب ترتيب عالي وإنت بتفوّت مصدر الشرح الأساسي.",
-  "إيه يا علق؟ عايز النتيجة من غير ما تحضر الطريق اللي بيوصلها؟",
-  "الغياب اتحسب. المرة الجاية خلي أولويتك واضحة بدل ما تسيب اليوم يسوقك."
-];
-const ATTENDANCE_NOTES = [
-  "تم تسجيل الحضور. عادي، ده المطلوب؛ كمّل يومك.",
-  "الحضور اتسجل. خطوة تنظيمية خلصت، نروح للي بعدها.",
-  "تمام، الدرس اتعلّم عليه حاضر. مفيش احتفال؛ حافظ على الجدول.",
-  "سجّلنا حضورك. كده بيانات الأسبوع بقت أدق.",
-  "الحضور اتوثّق. خليك ملتزم بالموعد اللي جاي.",
-  "تمام، مفيش غياب على الدرس ده. كمّل بهدوء.",
-  "اتحفظ الحضور. ده الأساس الطبيعي، مش إنجاز استثنائي.",
-  "الدرس اتسجل حاضر. ركّز في الاستفادة منه بقى.",
-  "حاضر اتسجل. اقفل الموضوع وكمّل مذاكرتك.",
-  "تمام، جدولك اتحدّث. حافظ على نفس النظام.",
-  "تم تسجيل الدرس. خطوة صغيرة في تنظيم أسبوعك.",
-  "الحضور موجود. متسيبش باقي مواعيدك للصدفة.",
-  "اتعلّم حاضر. كده خلصنا الجزء الإداري.",
-  "تمام، الدرس اتحسب حضور. شوف المهمة اللي بعده.",
-  "الحضور اتسجل في وقته. خليك ماشي على النظام.",
-  "مفيش رسالة حماسية هنا؛ حضرت وخلاص، وده الطبيعي.",
-  "تم الحضور. دلوقتي المهم تراجع اللي اتشرح.",
-  "الدرس حاضر. روتين بسيط واتعمل.",
-  "اتحفظت النتيجة: حاضر. كمّل أسبوعك.",
-  "تمام، الميعاد اتقفل بحضور. استعد للدرس الجاي.",
-  "حضورك اتسجل من غير لخبطة. خليها عادة عادية.",
-  "اتوثّق الدرس. استخدم وقتك بعده في مراجعة سريعة.",
-  "الدرس اتحسب حاضر. مفيش داعي نكبّر الموضوع.",
-  "حاضر. حافظ على الاستمرارية وخلاص.",
-  "تمام، سجلنا إنك حضرت. راجع ملاحظاتك لما تفضى.",
-  "الحضور اتضاف للأسبوع الحالي. كمل التزاماتك.",
-  "الدرس حاضر، والجدول محدث. ننتقل للي بعده.",
-  "اتسجل حضورك. ده المطلوب بالضبط.",
-  "تمام، مفيش إجراء تاني هنا؛ ركّز في المادة.",
-  "تم تسجيل الحضور. خليك جاهز للموعد القادم."
-];
-function randomAttendanceRoast(){ return randomMessage(ATTENDANCE_ROASTS); }
-function randomAttendanceNote(){ return randomMessage(ATTENDANCE_NOTES); }
 function dismissToast(toast){
   if(toast) toast.remove();
   if(!toast || toast.dataset.persistent==='true'){
@@ -3081,338 +2873,22 @@ function renderErrorsPage(){
   renderErrorAnalysis();
 }
 
-const ATTENDANCE_DAYS = ['الأحد','الاتنين','التلات','الأربع','الخميس','الجمعة','السبت'];
-function attendanceDayOptions(selected){
-  return '<option value="">اليوم</option>' + ATTENDANCE_DAYS.map((day,index)=>
-    `<option value="${index}" ${String(selected)===String(index) ? 'selected' : ''}>${day}</option>`
-  ).join('');
-}
 
 const SUBJECTS = ['عربي','إنجليزي','فيزياء','كيمياء','رياضيات'];
-function attendanceSubjectOptions(selected){
-  return '<option value="">اختار المادة</option>' + SUBJECTS.map(subject=>
-    `<option value="${escapeHtml(subject)}" ${selected===subject ? 'selected' : ''}>${escapeHtml(subject)}</option>`
-  ).join('');
-}
 
-function renderAttendanceSchedule(){
-  const saved = Array.isArray(data.attendanceSchedule) ? data.attendanceSchedule : [];
-  const slots = Array.from({length:6}, (_,index)=>saved[index] || {
-    id:'lesson-slot-'+(index+1), day:'', subject:'', time:''
-  });
-  const form = document.getElementById('attendanceScheduleForm');
-  form.innerHTML = slots.map((slot,index)=>`
-    <div class="schedule-row" data-slot-id="${escapeHtml(String(slot.id || 'lesson-slot-'+(index+1)))}">
-      <select data-role="day" aria-label="يوم الدرس ${index+1}">${attendanceDayOptions(slot.day)}</select>
-      <select data-role="subject" aria-label="مادة الدرس ${index+1}">${attendanceSubjectOptions(slot.subject || '')}</select>
-      <input type="time" data-role="time" aria-label="ميعاد الدرس ${index+1}" value="${escapeHtml(slot.time || '')}">
-    </div>
-  `).join('');
-}
 
-function getWeekStart(date=new Date()){
-  const start = new Date(date);
-  start.setHours(0,0,0,0);
-  start.setDate(start.getDate() - start.getDay());
-  return start;
-}
 
-function syncAttendanceInstances(){
-  if(!Array.isArray(data.attendanceSchedule)) data.attendanceSchedule = [];
-  if(!Array.isArray(data.attendanceInstances)) data.attendanceInstances = [];
-  // Create lessons for the current week only. Older weeks already have
-  // their own saved instances; creating a new previous-week copy can make
-  // a fresh schedule look like it was missed.
-  const offsets = [0];
-  let changed = false;
 
-  offsets.forEach(weekOffset=>{
-    const weekStart = getWeekStart();
-    weekStart.setDate(weekStart.getDate() - (weekOffset * 7));
-    const weekKey = todayStr(weekStart);
 
-    data.attendanceSchedule.forEach((slot,index)=>{
-      if(slot.day === '' || !slot.subject || !slot.time) return;
-      const slotId = slot.id || 'lesson-slot-'+(index+1);
-      const instanceId = slotId+'_'+weekKey;
-      const lessonDate = new Date(weekStart);
-      lessonDate.setDate(lessonDate.getDate()+Number(slot.day));
-      const lessonDateKey = todayStr(lessonDate);
-      // Same lesson can already exist either because we generated it before
-      // (matched by id) or because the user logged it manually from the
-      // calendar form first (matched by date+subject+time). Either way it's
-      // the same lesson, so don't create a second copy of it.
-      const existing = data.attendanceInstances.find(instance=>
-        instance.id===instanceId ||
-        (instance.date===lessonDateKey && instance.subject===slot.subject && instance.time===slot.time)
-      );
-      if(existing){
-        // Adopt the canonical schedule id so future syncs recognize it by
-        // id too, without touching whatever status was already recorded.
-        if(existing.id!==instanceId){
-          existing.id = instanceId;
-          existing.slotId = slotId;
-          changed = true;
-        }
-        return;
-      }
 
-      data.attendanceInstances.push({
-        id:instanceId,
-        slotId,
-        date:lessonDateKey,
-        subject:slot.subject,
-        time:slot.time,
-        status:'pending'
-      });
-      changed = true;
-    });
-  });
-  return changed;
-}
 
-function lessonDateTime(instance){
-  const date = new Date(instance.date+'T00:00:00');
-  const [hours,minutes] = String(instance.time || '00:00').split(':').map(Number);
-  date.setHours(hours || 0, minutes || 0, 0, 0);
-  return date;
-}
 
-function attendanceStatusLabel(status){
-  if(status==='present') return 'حاضر';
-  if(status==='absent') return 'غياب';
-  return 'مستني التسجيل';
-}
 
-function attendanceItemHtml(instance){
-  return `<div class="attendance-item">
-    <div class="attendance-info">
-      <div class="attendance-subject">${escapeHtml(instance.subject)}</div>
-      <div class="attendance-meta">${formatExamDate(instance.date)} · ${instance.time}</div>
-    </div>
-    <select class="attendance-status-select ${instance.status}" onchange="updateAttendanceStatus('${escapeHtml(instance.id)}', this.value)" aria-label="حالة حضور ${escapeHtml(instance.subject)}">
-      <option value="pending" ${instance.status==='pending' ? 'selected' : ''}>مستني التسجيل</option>
-      <option value="present" ${instance.status==='present' ? 'selected' : ''}>حاضر</option>
-      <option value="absent" ${instance.status==='absent' ? 'selected' : ''}>غياب</option>
-    </select>
-    <button class="icon-btn danger" type="button" onclick="deleteAttendanceInstance('${escapeHtml(instance.id)}')" aria-label="حذف السجل">🗑️</button>
-  </div>`;
-}
 
-function updateAttendanceStatus(instanceId, status){
-  const instance = data.attendanceInstances.find(item=>item.id===instanceId);
-  if(!instance) return;
-  if(status!=='pending' && status!=='present' && status!=='absent') return;
-  instance.status = status;
-  recalculateRecordedPoints();
-  saveData();
-  renderAttendance();
-  renderPrediction();
-}
 
-function deleteAttendanceInstance(instanceId){
-  const confirmed = window.confirm('متأكد إنك عايز تمسح سجل الحضور ده؟ مش هيرجع تاني.');
-  if(!confirmed) return;
-  data.attendanceInstances = (data.attendanceInstances || []).filter(item=>item.id!==instanceId);
-  recalculateRecordedPoints();
-  saveData();
-  renderAttendance();
-  renderPrediction();
-}
 
-function shiftAttendanceHistory(dir){
-  attendanceHistoryAnchor.setMonth(attendanceHistoryAnchor.getMonth() + dir);
-  const now = new Date();
-  const isFuture = attendanceHistoryAnchor.getFullYear() > now.getFullYear() ||
-    (attendanceHistoryAnchor.getFullYear()===now.getFullYear() && attendanceHistoryAnchor.getMonth() > now.getMonth());
-  if(isFuture) attendanceHistoryAnchor = new Date(now.getFullYear(), now.getMonth(), 1);
-  renderAttendance();
-  renderPrediction();
-}
 
-function renderAttendance(){
-  renderAttendanceSchedule();
-  const changed = syncAttendanceInstances();
-  if(changed) saveData();
 
-  const today = todayStr();
-  const currentWeekStart = getWeekStart();
-  const currentWeekEnd = new Date(currentWeekStart);
-  currentWeekEnd.setDate(currentWeekEnd.getDate()+6);
-  const startKey = todayStr(currentWeekStart);
-  const endKey = todayStr(currentWeekEnd);
-  const instances = data.attendanceInstances
-    .filter(instance=>instance.date >= startKey && instance.date <= endKey)
-    .sort((a,b)=>(a.date+' '+a.time).localeCompare(b.date+' '+b.time));
-  const list = document.getElementById('attendanceList');
-
-  list.innerHTML = instances.length
-    ? instances.map(attendanceItemHtml).join('')
-    : '<div class="empty">ظبّط جدولك فوق عشان دروس الأسبوع تظهر هنا.</div>';
-
-  const historyEl = document.getElementById('attendanceHistoryList');
-  const historyYear = attendanceHistoryAnchor.getFullYear();
-  const historyMonth = attendanceHistoryAnchor.getMonth();
-  const history = data.attendanceInstances
-    .filter(instance=>{
-      const parsed = parseDateKey(instance.date);
-      return parsed && parsed.year===historyYear && parsed.month===historyMonth;
-    })
-    .sort((a,b)=>(b.date || '').localeCompare(a.date || '') ||
-      (b.time || '').localeCompare(a.time || '') || String(b.id).localeCompare(String(a.id)));
-  historyEl.innerHTML = history.length
-    ? history.map(attendanceItemHtml).join('')
-    : '<div class="empty">مفيش سجل حضور أو غياب في الشهر ده.</div>';
-
-  const attHistoryLabel = document.getElementById('attHistoryLabel');
-  if(attHistoryLabel) attHistoryLabel.textContent = ARABIC_MONTHS[historyMonth]+' '+historyYear;
-  const attHistoryNextBtn = document.getElementById('attHistoryNextBtn');
-  const now2 = new Date();
-  if(attHistoryNextBtn) attHistoryNextBtn.disabled = (historyYear===now2.getFullYear() && historyMonth===now2.getMonth());
-}
-
-function saveAttendanceSchedule(){
-  const rows = [...document.querySelectorAll('#attendanceScheduleForm .schedule-row')];
-  const schedule = [];
-  for(const row of rows){
-    const day = row.querySelector('[data-role="day"]').value;
-    const subject = row.querySelector('[data-role="subject"]').value;
-    const time = row.querySelector('[data-role="time"]').value;
-    const hasAnyValue = day !== '' || subject || time;
-    if(!hasAnyValue) continue;
-    if(day === '' || !subject || !time){
-      alert('كمّل اليوم والمادة والميعاد في كل درس بدأته.');
-      return;
-    }
-    schedule.push({ id:row.dataset.slotId, day, subject, time });
-  }
-  if(schedule.length > 6){
-    alert('الحد الأقصى ٦ دروس أسبوعيًا.');
-    return;
-  }
-  data.attendanceSchedule = schedule;
-  syncAttendanceInstances();
-  const saved = saveData();
-  if(!saved){
-    alert('المتصفح منع حفظ الجدول. فعّل التخزين المحلي للصفحة وحاول تاني.');
-    return;
-  }
-  renderAttendance();
-  renderPrediction();
-  const status = document.getElementById('attendanceSaveStatus');
-  status.style.display = 'block';
-  clearTimeout(window.attendanceSaveStatusTimer);
-  window.attendanceSaveStatusTimer = setTimeout(()=>{ status.style.display='none'; }, 2500);
-}
-
-function markAttendancePresent(instanceId){
-  const instance = data.attendanceInstances.find(item=>item.id===instanceId);
-  if(!instance || instance.status!=='pending') return;
-  if(Date.now() < lessonDateTime(instance).getTime()){
-    alert('لسه ميعاد الدرس مجاش. سجّل حضورك بعد الميعاد.');
-    return;
-  }
-  instance.status='present';
-  recalculateRecordedPoints();
-  saveData();
-  renderAttendance();
-  renderPrediction();
-  showToast(randomAttendanceNote(), 'motivation', false);
-}
-
-function addAttendanceRecord(){
-  const date = document.getElementById('attendanceDate').value;
-  const subject = document.getElementById('attendanceSubjectInput').value.trim();
-  const time = document.getElementById('attendanceTimeInput').value;
-  const status = document.getElementById('attendanceStatusInput').value;
-
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){
-    alert('اختار تاريخ الدرس الأول.');
-    return;
-  }
-  if(!time){
-    alert('اختار ميعاد الدرس الأول.');
-    return;
-  }
-  const today = todayStr();
-  // الحضور/الغياب = حدث حصل بالفعل، لذلك اليوم أو الماضي فقط.
-  if(date > today){
-    document.getElementById('attendanceDate').value = today;
-    alert('مينفعش تسجّل حضور أو غياب بتاريخ في المستقبل. اختار تاريخ النهارده أو تاريخ أقدم.');
-    return;
-  }
-  // لو التسجيل بتاريخ النهارده، ميعاد الحصة نفسه لازم يكون عدى بالفعل.
-  // أما التاريخ القديم، فالساعة ممكن تكون أي وقت لأنها تخص حصة حدثت بالفعل.
-  if(date === today){
-    const lessonMoment = new Date(date+'T'+time+':00');
-    if(isNaN(lessonMoment.getTime()) || lessonMoment.getTime() > Date.now()){
-      alert('لو هتسجّل حصة النهارده، لازم ميعاد الحصة يكون عدى بالفعل. للحصص القديمة اختار تاريخ أقدم من النهارده.');
-      return;
-    }
-  }
-  if(!subject){
-    alert('اختار المادة الأول.');
-    return;
-  }
-  if(status!=='present' && status!=='absent') return;
-
-  const existing = data.attendanceInstances.find(instance=>
-    instance.date===date && instance.subject===subject && instance.time===time
-  );
-  if(existing){
-    existing.status = status;
-  }else{
-    data.attendanceInstances.push({
-      id:'manual-attendance-'+Date.now(),
-      slotId:'manual',
-      date,
-      subject,
-      time,
-      status
-    });
-  }
-  recalculateRecordedPoints();
-  saveData();
-  renderAttendance();
-  renderPrediction();
-  document.getElementById('attendanceDate').value = todayStr();
-  document.getElementById('attendanceSubjectInput').value = '';
-  document.getElementById('attendanceTimeInput').value = '';
-  showToast(
-    status==='present' ? randomAttendanceNote() : randomAttendanceRoast(),
-    status==='present' ? 'motivation' : 'roast',
-    status==='absent'
-  );
-}
-
-function checkAttendanceExpired(){
-  const changed = syncAttendanceInstances();
-  let newAbsence = false;
-  const now = Date.now();
-  const currentWeekStart = getWeekStart();
-  const currentWeekEnd = new Date(currentWeekStart);
-  currentWeekEnd.setDate(currentWeekEnd.getDate()+6);
-  const startKey = todayStr(currentWeekStart);
-  const endKey = todayStr(currentWeekEnd);
-  const expired = data.attendanceInstances
-    .filter(instance=>{
-      if(instance.date < startKey || instance.date > endKey || instance.status!=='pending') return false;
-      const deadline = lessonDateTime(instance);
-      deadline.setHours(deadline.getHours()+8);
-      return now >= deadline.getTime();
-    })
-    .sort((a,b)=>lessonDateTime(a)-lessonDateTime(b));
-
-  expired.forEach(instance=>{
-    instance.status='absent';
-    newAbsence = true;
-  });
-  if(newAbsence) recalculateRecordedPoints();
-  if(changed || newAbsence) saveData();
-  if(newAbsence) showToast(randomAttendanceRoast(), 'roast', true);
-  renderAttendance();
-  renderPrediction();
-}
 
 function markDone(id){
   const tasks = getTodayTasks();
@@ -3481,11 +2957,10 @@ function rollover(){
 
 /* ---------- RENDER ---------- */
 function renderPointBreakdown(){
-  const totals = data.pointTotals || {tasks:0, exams:0, attendance:0, streaks:0};
+  const totals = data.pointTotals || {tasks:0, exams:0, streaks:0};
   const values = {
     taskPointsTotal: totals.tasks || 0,
     examPointsTotal: totals.exams || 0,
-    attendancePointsTotal: totals.attendance || 0,
     streakPointsTotal: totals.streaks || 0
   };
   Object.entries(values).forEach(([id,value])=>{
@@ -3651,7 +3126,6 @@ function resetData(event){
   monthAnchor = new Date();
   yearAnchor = new Date();
   examHistoryAnchor = new Date();
-  attendanceHistoryAnchor = new Date();
   selectedErrorExamId = null;
   errorViewRange = 'all';
   selectedErrorSubject = '';
@@ -3661,8 +3135,7 @@ function resetData(event){
   errorYearAnchor = new Date();
   renderToday();
   renderExams();
-  renderAttendance();
-  renderPrediction();
+    renderPrediction();
   renderStats();
   startExamCountdown();
   showPage('readiness');
@@ -3695,7 +3168,7 @@ function handleRestoreFile(event){
       return;
     }
     const looksValid = parsed && typeof parsed === 'object' &&
-      ('tasksByDay' in parsed || 'exams' in parsed || 'attendanceInstances' in parsed);
+      ('tasksByDay' in parsed || 'exams' in parsed);
     if(!looksValid){
       alert('الملف ده مش نسخة احتياطية صحيحة. اختار ملف .json اتصدّر من التطبيق نفسه.');
       return;
@@ -3708,8 +3181,7 @@ function handleRestoreFile(event){
     monthAnchor = new Date();
     yearAnchor = new Date();
     examHistoryAnchor = new Date();
-    attendanceHistoryAnchor = new Date();
-    selectedErrorExamId = null;
+      selectedErrorExamId = null;
     errorViewRange = 'all';
     selectedErrorSubject = '';
     errorSubjectTimeRange = 'all';
@@ -3724,12 +3196,10 @@ function handleRestoreFile(event){
     rollover();
     renderToday();
     renderExams();
-    renderAttendance();
-  renderPrediction();
+      renderPrediction();
     renderStats();
     checkExpired();
-    checkAttendanceExpired();
-    showToast('اترجعت النسخة الاحتياطية ✅', 'motivation', false);
+        showToast('اترجعت النسخة الاحتياطية ✅', 'motivation', false);
   };
   reader.onerror = () => alert('حصلت مشكلة في قراءة الملف. حاول تاني.');
   reader.readAsText(file);
@@ -3752,7 +3222,6 @@ const PREDICTION_CONFIG = {
   comprehensiveWeight: 3,
   recencyHalfLifeDays: 24,
   trendHalfLifeDays: 45,
-  attendanceHalfLifeDays: 60,
   minBacktestPoints: 3,
   ridge: 1.8
 };
@@ -3771,11 +3240,6 @@ function predictionRows(rows){
   return rows.filter(r=>r&&/^\d{4}-\d{2}-\d{2}$/.test(String(r.date||''))&&Number.isFinite(predictionDateMs(r.date))&&Number.isFinite(Number(r.percentage)))
     .map(r=>({...r,percentage:Number(r.percentage)}))
     .sort((a,b)=>(a.date||'').localeCompare(b.date||'')||Number(a.id||0)-Number(b.id||0));
-}
-function predictionAttendanceRate(subject,beforeDate){
-  const rows=(data.attendanceInstances||[]).filter(x=>x.subject===subject&&x.date&&x.date<=beforeDate&&(x.status==='present'||x.status==='absent'));
-  if(!rows.length) return .5;
-  return rows.filter(x=>x.status==='present').length/rows.length;
 }
 function weightedMean(values,weights){
   let sw=0,sy=0;
@@ -3860,23 +3324,6 @@ function predictionSolve(A,b){
   return M.map(r=>r[n]);
 }
 
-function attendanceRegressionPrediction(rows){
-  const r=predictionRows(rows); if(r.length<5)return null;
-  const n=r.length,p=4,lastDate=r[r.length-1].date;
-  const base=predictionDateMs(r[0].date),span=Math.max(1,predictionDaysBetween(r[0].date,lastDate));
-  const X=[],Y=[],W=[];
-  r.forEach(x=>{
-    X.push([1,predictionDaysBetween(r[0].date,x.date)/span,x.type==='comprehensive'?1:0,predictionAttendanceRate(x.subject,x.date)-.5]);
-    Y.push(x.percentage);
-    W.push(predictionExamWeight(x)*predictionRecencyWeight(predictionDaysBetween(x.date,lastDate),PREDICTION_CONFIG.attendanceHalfLifeDays));
-  });
-  const A=Array.from({length:p},()=>Array(p).fill(0)),b=Array(p).fill(0);
-  for(let i=0;i<n;i++)for(let j=0;j<p;j++){b[j]+=W[i]*X[i][j]*Y[i];for(let k=0;k<p;k++)A[j][k]+=W[i]*X[i][j]*X[i][k];}
-  for(let i=1;i<p;i++)A[i][i]+=PREDICTION_CONFIG.ridge;
-  const beta=predictionSolve(A,b); if(!beta)return null;
-  const att=predictionAttendanceRate(r[0].subject,lastDate),nextT=1+1/Math.max(2,r.length-1);
-  return predictionClamp(beta[0]+beta[1]*nextT+beta[2]*.75+beta[3]*(att-.5));
-}
 
 function predictionCandidates(rows){
   const r=predictionRows(rows);
@@ -3887,7 +3334,6 @@ function predictionCandidates(rows){
     anchor35:comprehensiveAnchorPrediction(r,.35),
     anchor58:comprehensiveAnchorPrediction(r,.58),
     anchor75:comprehensiveAnchorPrediction(r,.75),
-    attendance:attendanceRegressionPrediction(r)
   };
   return Object.fromEntries(Object.entries(out).filter(([,v])=>v!==null&&Number.isFinite(v)));
 }
@@ -3974,16 +3420,15 @@ function shiftDate(dateStr,delta){const d=new Date(dateStr+'T12:00:00');d.setDat
    IMPORTANT: this layer only stores/reuses outputs from the existing prediction
    engine. It does not alter any forecasting formula, model, weighting,
    backtesting, trend calculation, or ensemble logic. The cache is invalidated
-   only when prediction inputs (exams/attendance) or the engine version change. */
-const PREDICTION_ENGINE_VERSION = '2026-09-23-persistent-cache-v1';
+   only when exam inputs or the engine version change. */
+const PREDICTION_ENGINE_VERSION = '2026-10-19-no-attendance-v2';
 const PREDICTION_CACHE_STORE_KEY = 'ghayah_prediction_cache_v1';
 let predictionCacheSignature = '';
 let predictionCacheLoaded = false;
 const predictionCache = new Map();
 function predictionDataSignature(){
   const exams=(data.exams||[]).map(e=>`${e.id||''}|${e.date||''}|${e.type||''}|${e.subject||''}|${e.percentage||''}`).join('~');
-  const att=(data.attendanceInstances||[]).map(a=>`${a.id||''}|${a.date||''}|${a.subject||''}|${a.time||''}|${a.status||''}`).join('~');
-  return exams+'||'+att;
+  return exams;
 }
 function persistPredictionCacheState(){
   try{
@@ -4172,7 +3617,6 @@ function expectedAchievementState(a){
 }
 
 function achievementCurrentValue(a, counts){
-  if(a.type==='attendance_count') return (Array.isArray(data.attendanceInstances)?data.attendanceInstances:[]).filter(x=>x.status==='present').length;
   if(a.type==='subject_weekly_score_count') return counts.subjectCounts[a.subject]?.[a.score] || 0;
   if(a.type==='global_weekly_score_count') return counts.global[a.score] || 0;
   if(a.type==='comprehensive_score_count') return counts.comp[a.score] || 0;
@@ -4192,7 +3636,7 @@ function updateExpectedAchievementHistory(){
 function updateAchievements(){
   if(!Array.isArray(data.achievementsUnlocked)) data.achievementsUnlocked=[];
   if(!data.achievementPointsAwarded || typeof data.achievementPointsAwarded !== 'object') data.achievementPointsAwarded={};
-  if(!data.pointTotals || typeof data.pointTotals !== 'object') data.pointTotals={tasks:0,exams:0,attendance:0,streaks:0,achievements:0};
+  if(!data.pointTotals || typeof data.pointTotals !== 'object') data.pointTotals={tasks:0,exams:0,streaks:0,achievements:0};
   if(!Number.isFinite(Number(data.pointTotals.achievements))) data.pointTotals.achievements=0;
   updateExpectedAchievementHistory();
   const unlocked=new Set(data.achievementsUnlocked.map(Number));
@@ -4213,7 +3657,7 @@ function updateAchievements(){
     data.achievementPointsAwarded[String(id)]=xp;
   });
   data.achievementsUnlocked=[...unlocked].sort((a,b)=>a-b);
-  data.points=Number(data.pointTotals.tasks||0)+Number(data.pointTotals.exams||0)+Number(data.pointTotals.attendance||0)+Number(data.pointTotals.streaks||0)+Number(data.pointTotals.achievements||0);
+  data.points=Number(data.pointTotals.tasks||0)+Number(data.pointTotals.exams||0)+Number(data.pointTotals.streaks||0)+Number(data.pointTotals.achievements||0);
 }
 function achievementProgress(a, value){
   if(a.type==='expected_overall' || a.type==='expected_subject'){
@@ -4367,7 +3811,6 @@ function showPage(p){
   document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.toggle('active', b.dataset.page===p));
   if(p==='exams') renderExams();
   if(p==='errors') renderErrorsPage();
-  if(p==='attendance') checkAttendanceExpired();
   if(p==='stats') renderStats();
   if(p==='readiness'){ renderExamCountdown(); renderPrediction(); }
   if(p==='achievements') renderAchievements();
@@ -4379,7 +3822,6 @@ function showPage(p){
 function initializeDateInputs(){
   const today = todayStr();
   const examDate = document.getElementById('examDate');
-  const attendanceDate = document.getElementById('attendanceDate');
   if(examDate){
     examDate.value = today;
     // الامتحان حدث حصل بالفعل: اليوم أو أي تاريخ قبله فقط.
@@ -4396,25 +3838,6 @@ function initializeDateInputs(){
       }
     });
   }
-  if(attendanceDate){
-    attendanceDate.value = today;
-    // تسجيل الحضور/الغياب = حدث حصل بالفعل: اليوم أو أي تاريخ قبله فقط.
-    // ممنوع أي تاريخ بعد النهارده.
-    attendanceDate.setAttribute('max', today);
-    attendanceDate.max = today;
-    attendanceDate.addEventListener('change', ()=>{
-      const selected = attendanceDate.value;
-      const currentToday = todayStr();
-      if(selected && selected > currentToday){
-        attendanceDate.value = currentToday;
-        alert('مينفعش تسجّل حضور أو غياب بتاريخ في المستقبل. اختار النهارده أو تاريخ أقدم.');
-      }
-    });
-  }
-  const attendanceSubjectInput = document.getElementById('attendanceSubjectInput');
-  if(attendanceSubjectInput){
-    attendanceSubjectInput.innerHTML = attendanceSubjectOptions('');
-  }
   const examFilterSubject = document.getElementById('examFilterSubject');
   if(examFilterSubject){
     examFilterSubject.innerHTML = '<option value="">كل المواد</option>' +
@@ -4429,14 +3852,11 @@ initializeDateInputs();
 rollover();
 renderToday();
 renderExams();
-renderAttendance();
   renderPrediction();
 checkExpired();
-checkAttendanceExpired();
 restorePendingToast();
 restoreAchievementNotifications();
 setInterval(()=>{ rollover(); checkExpired(); renderToday(); }, 20000);
-setInterval(()=>{ checkAttendanceExpired(); }, 20000);
 
 startExamCountdown();
 renderPrediction();
