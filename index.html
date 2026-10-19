@@ -98,7 +98,7 @@
   .stat-card.points .num{color:var(--gold);}
   .stat-card.streak .num{color:var(--mint);}
   .points-breakdown{
-    display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px;
+    display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:8px;
   }
   .points-breakdown .point-box{
     background:var(--surface); border:1px solid var(--border);
@@ -296,6 +296,15 @@
   .exam-record .record-subject{font-weight:700;}
   .exam-record .record-meta{font-size:11px; color:var(--muted); margin-top:2px;}
   .exam-record .record-score{font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-weight:800; color:var(--mint);}
+  .schedule-row{
+    display:grid; grid-template-columns:1fr 1.2fr .9fr; gap:8px;
+    margin-bottom:8px;
+  }
+  .schedule-row input,.schedule-row select{
+    width:100%; min-width:0; background:var(--surface-2);
+    border:1px solid var(--border); color:var(--text); border-radius:9px;
+    padding:9px 8px; font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif; font-size:12px;
+  }
   .schedule-row input[type=time]{font-family:'Noto Sans Arabic','Cairo','Tajawal',sans-serif;}
   .record-actions{display:flex; gap:4px; flex-shrink:0;}
   .icon-btn{
@@ -472,6 +481,10 @@
   @media (max-width:520px){
     .form-grid{grid-template-columns:1fr;}
     .field.full{grid-column:auto;}
+    .schedule-row{grid-template-columns:1fr 1.25fr 1fr;}
+    .points-breakdown{grid-template-columns:repeat(2,1fr);}
+    .subject-breakdown{grid-template-columns:repeat(2,1fr);}
+  }
 </style>
 </head>
 <body>
@@ -626,13 +639,13 @@
   <div id="errorSubjectBreakdown" class="exam-form"></div>
 </section>
 
-
+<!-- PAGE: STATS -->
 <!-- PAGE: ACHIEVEMENTS -->
 <section class="wrap page" id="page-achievements">
   <div class="section-head"><h2>الإنجازات</h2></div>
   <div class="achievement-summary">
     <div class="achievement-stat"><div class="num" id="achievementUnlockedCount">0</div><div class="lbl">مفتوح</div></div>
-    <div class="achievement-stat"><div class="num" id="achievementTotalCount">152</div><div class="lbl">الإجمالي</div></div>
+    <div class="achievement-stat"><div class="num" id="achievementTotalCount">162</div><div class="lbl">الإجمالي</div></div>
     <div class="achievement-stat"><div class="num" id="achievementPct">0%</div><div class="lbl">نسبة الإنجاز</div></div>
   </div>
   <div class="achievement-filters" id="achievementFilters"></div>
@@ -659,7 +672,7 @@
 
   <div class="prediction-card">
     <div class="prediction-head">
-      <div><h3>📈 توقع النتيجة النهائية</h3><p>توقع ديناميكي مبني على نتائجك الفعلية، مع وزن أكبر للشوامل واتجاه مستواك.</p></div>
+      <div><h3>📈 توقع النتيجة النهائية</h3><p>توقع ديناميكي مبني على نتائجك الفعلية، مع وزن أكبر للشوامل، واتجاه المستوى.</p></div>
       <div class="prediction-status" id="predictionStatus">جاري التحليل…</div>
     </div>
     <div class="prediction-overall">
@@ -754,7 +767,7 @@
 /* ---------- DATA ---------- */
 const STORE_KEY = 'atnaffez_data_v1';
 const LAST_MESSAGE_KEY = 'atnaffez_last_message_v1';
-// Persistent notification queue for Ghayah achievement messages.
+// v3 clears any stale pending message from older versions.
 const PENDING_TOAST_KEY = 'atnaffez_pending_toast_v2';
 function todayStr(d=new Date()){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -763,9 +776,11 @@ function defaultData(){
   return {
     points:0, streak:0, lastEvaluatedDate:null,
     tasksByDay:{}, historyByDay:{}, exams:[],
+    
     examErrors:[],
     pointTotals:{tasks:0, exams:0, streaks:0, achievements:0},
     examStreak:{high:0, low:0},
+    
     achievementsUnlocked:[],
     expectedOverall:null,
     expectedBySubject:{},
@@ -804,6 +819,23 @@ function sanitizeData(parsed){
     .map(item=>({id:Number(item.id), name:String(item.name||''), message:String(item.message), createdAt:Number(item.createdAt)||Date.now()}));
   if(!parsed.achievementMessagesDismissed || typeof parsed.achievementMessagesDismissed!=='object') parsed.achievementMessagesDismissed = {};
   if(!parsed.lastEvaluatedDate) parsed.lastEvaluatedDate = null;
+  // Remove legacy attendance/absence data and its points/achievements.
+  delete parsed.attendanceSchedule;
+  delete parsed.attendanceInstances;
+  delete parsed.attendanceStreak;
+  if(parsed.pointTotals && typeof parsed.pointTotals === 'object') delete parsed.pointTotals.attendance;
+  if(Array.isArray(parsed.achievementsUnlocked)) parsed.achievementsUnlocked = parsed.achievementsUnlocked.filter(id=>Number(id)<1 || Number(id)>10);
+  if(parsed.achievementPointsAwarded && typeof parsed.achievementPointsAwarded === 'object'){
+    const legacyAttendanceXp = {1:5,2:5,3:10,4:10,5:10,6:15,7:15,8:20,9:20,10:25};
+    let removedAttendanceXp = 0;
+    for(let id=1;id<=10;id++){
+      removedAttendanceXp += Number(parsed.achievementPointsAwarded[String(id)]) || 0;
+      delete parsed.achievementPointsAwarded[String(id)];
+    }
+    if(parsed.pointTotals && typeof parsed.pointTotals === 'object'){
+      parsed.pointTotals.achievements = Math.max(0, (Number(parsed.pointTotals.achievements)||0) - removedAttendanceXp);
+    }
+  }
   return parsed;
 }
 function loadData(){
@@ -829,22 +861,6 @@ function saveData(){
 }
 
 let data = loadData();
-// Attendance was removed from Ghayah. Clear its legacy contribution without resetting any other progress.
-if(data.pointTotals && typeof data.pointTotals==='object') data.pointTotals.attendance=0; // discard legacy attendance points
-delete data.attendanceSchedule;
-delete data.attendanceInstances;
-delete data.attendanceStreak;
-if(data.achievementPointsAwarded && typeof data.achievementPointsAwarded==='object'){
-  for(let oldId=1;oldId<=10;oldId++){
-    const oldXp=Number(data.achievementPointsAwarded[String(oldId)])||0;
-    if(oldXp) data.pointTotals.achievements=Math.max(0,(Number(data.pointTotals.achievements)||0)-oldXp);
-    delete data.achievementPointsAwarded[String(oldId)];
-  }
-}
-if(Array.isArray(data.achievementsUnlocked)) data.achievementsUnlocked=data.achievementsUnlocked.filter(id=>Number(id)>10);
-if(Array.isArray(data.achievementNotificationQueue)) data.achievementNotificationQueue=data.achievementNotificationQueue.filter(item=>Number(item.id)>10);
-if(data.achievementMessagesDismissed && typeof data.achievementMessagesDismissed==='object'){ for(let oldId=1;oldId<=10;oldId++) delete data.achievementMessagesDismissed[String(oldId)]; }
-data.points=Number(data.pointTotals?.tasks||0)+Number(data.pointTotals?.exams||0)+Number(data.pointTotals?.streaks||0)+Number(data.pointTotals?.achievements||0);
 if(!Array.isArray(data.achievementNotificationQueue)) data.achievementNotificationQueue=[];
 if(!data.achievementMessagesDismissed || typeof data.achievementMessagesDismissed!=='object') data.achievementMessagesDismissed={};
 if(data.__achievementNotificationMigrationV1 !== true){
@@ -982,7 +998,7 @@ const ACHIEVEMENTS = [
   {id:100,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:80,required:35,nameAr:'متقن الإنجليزية',nameEn:'English Craftsman',condition:'إنجليزي — 80%+ في 35 امتحان أسبوعي'},
   {id:101,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:80,required:40,nameAr:'سيد اللغة الإنجليزية',nameEn:'Master of English',condition:'إنجليزي — 80%+ في 40 امتحان أسبوعي'},
   {id:102,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:10,nameAr:'أفق الطلاقة',nameEn:'Horizon of Fluency',condition:'إنجليزي — 90%+ في 10 امتحان أسبوعي'},
-  {id:103,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:15,nameAr:'صوت اللغة',nameEn:'Commanding Voice',condition:'إنجليزي — 90%+ في 15 امتحان أسبوعي'},
+  {id:103,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:15,nameAr:'حضور لغوي',nameEn:'Commanding Voice',condition:'إنجليزي — 90%+ في 15 امتحان أسبوعي'},
   {id:104,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:20,nameAr:'دقة التعبير',nameEn:'Precision in Expression',condition:'إنجليزي — 90%+ في 20 امتحان أسبوعي'},
   {id:105,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:25,nameAr:'صانع الطلاقة',nameEn:'Architect of Fluency',condition:'إنجليزي — 90%+ في 25 امتحان أسبوعي'},
   {id:106,cat:'إنجليزي',type:'subject_weekly_score_count',subject:'إنجليزي',score:90,required:30,nameAr:'سيد المفردات',nameEn:'Master of Vocabulary',condition:'إنجليزي — 90%+ في 30 امتحان أسبوعي'},
@@ -1047,16 +1063,6 @@ const ACHIEVEMENTS = [
 let achievementFilter = 'all';
 // Achievement XP is intentionally small because achievements are cumulative and many unlock together.
 const ACHIEVEMENT_XP = {
-  1:5,
-  2:5,
-  3:10,
-  4:10,
-  5:10,
-  6:15,
-  7:15,
-  8:20,
-  9:20,
-  10:25,
   11:1,
   12:1,
   13:2,
@@ -1476,10 +1482,11 @@ function achievementProgress(a, value){
 }
 function achievementBadgeDataUri(a){
   const id=String(a.id||'achievement');
-  const num=Number((id.match(/\d+/)||['0'])[0]);
+  const num=Number((id.match(/return exams;d+/)||['0'])[0]);
 
   // ---- per-category identity: each category has its own shape + palette ----
   const CATEGORY_STYLE={
+    
     'رياضيات':         {shape:'hexagon',  palette:['#0b1017','#263747','#9fb2c4','#d2aa55','#5cc8ff']},
     'كيمياء':          {shape:'diamond',  palette:['#0c1a12','#1f3d2c','#8fd9b0','#f4d35e','#5cffb0']},
     'فيزياء':          {shape:'starburst',palette:['#15101f','#35264b','#bda0dc','#e0bd68','#c792ea']},
@@ -2013,7 +2020,7 @@ const EXAM_FEEDBACK = {
     "مقبولة كإنذار، مش كإنجاز. راجع أخطاءك وخلي الامتحان الجاي أعلى بوضوح.",
     "في أساس موجود، بس مستواك لسه مش ثابت. بطل تسيب درجات سهلة يا علق.",
     "النسبة دي تقول إنك بتحاول، لكنها تقول كمان إن المحاولة محتاجة نظام أقوى.",
-    "يا عرص، الطريق لهندسة محتاج قفزة في الالتزام والمذاكرة اليومية، مش مجرد انتظار الامتحان.",
+    "يا عرص، الطريق لهندسة محتاج قفزة في الالتزام، مش مجرد الاستعداد وقت الامتحان.",
     "أنت قريب من التحسن، لكن بعيد عن المنافسة الحقيقية. زوّد حل وتدريب.",
     "الرقم ده ينفع نقطة بداية، مش نقطة وصول. متتعاملش معاه كأنه كفاية.",
     "لو راجعت أخطاءك بجد هتعلي، لو اكتفيت بالزعل هتفضل مكانك.",
@@ -2168,10 +2175,13 @@ function recalculateRecordedPoints(){
     }
   });
 
+
   data.pointTotals.exams = examTotal;
   data.pointTotals.streaks = examStreakPoints;
+  
   if(!Number.isFinite(Number(data.pointTotals.achievements))) data.pointTotals.achievements = 0;
   data.examStreak = {high, low};
+  
   data.points = Number(data.pointTotals.tasks) + examTotal + examStreakPoints + Number(data.pointTotals.achievements);
 }
 recalculateRecordedPoints();
@@ -2235,7 +2245,7 @@ function addTask(){
   const now = new Date();
   const nowStr = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   if(time <= nowStr){
-    alert('الوقت اللي اخترته فات خلاص (' + time + ') ⏰\nخد بالك: الساعة بتتحسب بنظام 24 ساعة، يعني لو عايز 9 بالليل لازم تختار 21:00 مش 09:00.\nاختار وقت في المستقبل.');
+    alert('الوقت اللي اخترته فات خلاص (' + time + ') ⏰return exams;nخد بالك: الساعة بتتحسب بنظام 24 ساعة، يعني لو عايز 9 بالليل لازم تختار 21:00 مش 09:00.return exams;nاختار وقت في المستقبل.');
     return;
   }
   const tasks = getTodayTasks();
@@ -2278,7 +2288,7 @@ function addExam(){
     alert('اكتب نسبة صحيحة من 0 لحد 100.');
     return;
   }
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(examDate) || examDate > todayStr()){
+  if(!/^return exams;d{4}-return exams;d{2}-return exams;d{2}$/.test(examDate) || examDate > todayStr()){
     document.getElementById('examDate').value = todayStr();
     alert('اختار تاريخ امتحان صحيح، ومينفعش يكون في المستقبل.');
     return;
@@ -2874,22 +2884,6 @@ function renderErrorsPage(){
 }
 
 
-const SUBJECTS = ['عربي','إنجليزي','فيزياء','كيمياء','رياضيات'];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function markDone(id){
   const tasks = getTodayTasks();
   const t = tasks.find(x=>x.id===id);
@@ -3126,6 +3120,7 @@ function resetData(event){
   monthAnchor = new Date();
   yearAnchor = new Date();
   examHistoryAnchor = new Date();
+  
   selectedErrorExamId = null;
   errorViewRange = 'all';
   selectedErrorSubject = '';
@@ -3181,7 +3176,8 @@ function handleRestoreFile(event){
     monthAnchor = new Date();
     yearAnchor = new Date();
     examHistoryAnchor = new Date();
-      selectedErrorExamId = null;
+    
+    selectedErrorExamId = null;
     errorViewRange = 'all';
     selectedErrorSubject = '';
     errorSubjectTimeRange = 'all';
@@ -3227,7 +3223,7 @@ const PREDICTION_CONFIG = {
 };
 function predictionExamWeight(e){ return e.type==='comprehensive'?PREDICTION_CONFIG.comprehensiveWeight:1; }
 function predictionDateMs(dateStr){
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr||''))) return NaN;
+  if(!/^return exams;d{4}-return exams;d{2}-return exams;d{2}$/.test(String(dateStr||''))) return NaN;
   const t=Date.parse(dateStr+'T12:00:00');
   return Number.isFinite(t)?t:NaN;
 }
@@ -3237,7 +3233,7 @@ function predictionDaysBetween(a,b){
   return Math.max(0,(y-x)/86400000);
 }
 function predictionRows(rows){
-  return rows.filter(r=>r&&/^\d{4}-\d{2}-\d{2}$/.test(String(r.date||''))&&Number.isFinite(predictionDateMs(r.date))&&Number.isFinite(Number(r.percentage)))
+  return rows.filter(r=>r&&/^return exams;d{4}-return exams;d{2}-return exams;d{2}$/.test(String(r.date||''))&&Number.isFinite(predictionDateMs(r.date))&&Number.isFinite(Number(r.percentage)))
     .map(r=>({...r,percentage:Number(r.percentage)}))
     .sort((a,b)=>(a.date||'').localeCompare(b.date||'')||Number(a.id||0)-Number(b.id||0));
 }
@@ -3333,7 +3329,7 @@ function predictionCandidates(rows){
     trend:weightedCalendarTrend(r),
     anchor35:comprehensiveAnchorPrediction(r,.35),
     anchor58:comprehensiveAnchorPrediction(r,.58),
-    anchor75:comprehensiveAnchorPrediction(r,.75),
+    anchor75:comprehensiveAnchorPrediction(r,.75)
   };
   return Object.fromEntries(Object.entries(out).filter(([,v])=>v!==null&&Number.isFinite(v)));
 }
@@ -3420,15 +3416,14 @@ function shiftDate(dateStr,delta){const d=new Date(dateStr+'T12:00:00');d.setDat
    IMPORTANT: this layer only stores/reuses outputs from the existing prediction
    engine. It does not alter any forecasting formula, model, weighting,
    backtesting, trend calculation, or ensemble logic. The cache is invalidated
-   only when exam inputs or the engine version change. */
-const PREDICTION_ENGINE_VERSION = '2026-10-19-no-attendance-v2';
+   only when prediction inputs (exams) or the engine version change. */
+const PREDICTION_ENGINE_VERSION = '2026-09-23-persistent-cache-v1';
 const PREDICTION_CACHE_STORE_KEY = 'ghayah_prediction_cache_v1';
 let predictionCacheSignature = '';
 let predictionCacheLoaded = false;
 const predictionCache = new Map();
 function predictionDataSignature(){
-  const exams=(data.exams||[]).map(e=>`${e.id||''}|${e.date||''}|${e.type||''}|${e.subject||''}|${e.percentage||''}`).join('~');
-  return exams;
+  return (data.exams||[]).map(e=>`${e.id||''}|${e.date||''}|${e.type||''}|${e.subject||''}|${e.percentage||''}`).join('~');
 }
 function persistPredictionCacheState(){
   try{
