@@ -1,20 +1,21 @@
-const CACHE_NAME = 'ghayah-offline-v4-stability';
-const ASSETS = [
-  './index.html', './fonts.css', './manifest.json',
-  './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png',
-  './fonts/noto-sans-arabic-arabic.woff2', './fonts/noto-sans-arabic-latin.woff2', './fonts/noto-sans-arabic-latin-ext.woff2',
-  './fonts/cairo-arabic.woff2', './fonts/cairo-latin.woff2', './fonts/cairo-latin-ext.woff2',
-  './fonts/tajawal-arabic-400.woff2', './fonts/tajawal-latin-400.woff2',
-  './fonts/tajawal-arabic-500.woff2', './fonts/tajawal-latin-500.woff2',
-  './fonts/tajawal-arabic-700.woff2', './fonts/tajawal-latin-700.woff2',
-  './fonts/noto-sans-display-latin.woff2', './fonts/noto-sans-display-latin-ext.woff2',
-  './fonts/arial-narrow-bold.woff2', './fonts/impact.ttf', './fonts/haettenschweiler.ttf'
-];
+/* Ghayah service worker — network-first updates with offline fallback.
+   Optional font/icon files are cached only when successfully requested, so a
+   missing optional asset cannot break the service-worker installation. */
+const CACHE_NAME = 'ghayah-app-v5-stats-all';
+const APP_SHELL = ['./', './index.html', './fonts.css', './manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(ASSETS);
+    for (const path of APP_SHELL) {
+      try {
+        const url = new URL(path, self.registration.scope);
+        const response = await fetch(url.href, { cache: 'reload' });
+        if (response && response.status === 200) await cache.put(url.href, response.clone());
+      } catch (error) {
+        // Keep installing even when an optional/offline shell file is unavailable.
+      }
+    }
     await self.skipWaiting();
   })());
 });
@@ -22,13 +23,13 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
+    await Promise.all(keys
+      .filter((key) => key.startsWith('ghayah-app-') && key !== CACHE_NAME)
+      .map((key) => caches.delete(key)));
     await self.clients.claim();
   })());
 });
 
-// Network-first for same-origin files: GitHub Pages updates become visible
-// while online, while the last successful copy remains available offline.
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
@@ -37,20 +38,21 @@ self.addEventListener('fetch', (event) => {
   if (requestUrl.origin !== self.location.origin) return;
 
   event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
     try {
+      // Prefer GitHub Pages so a published update is not hidden by an old cache.
       const response = await fetch(request, { cache: 'no-cache' });
-      if (response && response.ok) {
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(request, response.clone());
+      if (response && response.status === 200 && (response.type === 'basic' || response.type === 'default')) {
+        try { await cache.put(request, response.clone()); } catch (cacheError) { /* serving the network response is still successful */ }
       }
       return response;
     } catch (error) {
       const cached = await caches.match(request);
       if (cached) return cached;
       if (request.mode === 'navigate') {
-        const appShell = new URL('./index.html', self.registration.scope).href;
-        const fallback = await caches.match(appShell);
-        if (fallback) return fallback;
+        const appUrl = new URL('./index.html', self.registration.scope).href;
+        const appShell = await caches.match(appUrl);
+        if (appShell) return appShell;
       }
       return new Response('المحتوى غير متاح دون اتصال بالإنترنت.', {
         status: 503,

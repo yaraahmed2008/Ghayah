@@ -729,6 +729,7 @@
     <button type="button" data-stats-type="comprehensive" onclick="setExamStatsType('comprehensive')">الشوامل</button>
   </div>
   <div class="exam-stats-tabs period-tabs" id="examStatsPeriodTabs">
+    <button type="button" data-stats-period="all" onclick="setExamStatsPeriod('all')">كل النتائج</button>
     <button type="button" data-stats-period="week" onclick="setExamStatsPeriod('week')">أسبوعية</button>
     <button type="button" data-stats-period="month" onclick="setExamStatsPeriod('month')">شهرية</button>
     <button type="button" data-stats-period="year" onclick="setExamStatsPeriod('year')">سنوية</button>
@@ -736,7 +737,7 @@
   <div id="examStatsRange" class="exam-stats-range"></div>
   <div id="examStatsSummary" class="subject-breakdown"></div>
   <div class="exam-chart-panel">
-    <div class="exam-chart-head"><div><h3>تطور درجاتك</h3><span>الرسم بيعرض الصعود والنزول في مستواك حسب الاختيار والفترة</span></div><div class="chart-period-tabs" id="examChartPeriodTabs"><button type="button" data-chart-period="week" onclick="setExamChartPeriod('week')">أسبوع</button><button type="button" data-chart-period="month" onclick="setExamChartPeriod('month')">شهر</button><button type="button" data-chart-period="year" onclick="setExamChartPeriod('year')">سنة دراسية</button></div></div>
+    <div class="exam-chart-head"><div><h3>تطور درجاتك</h3><span>الرسم بيعرض الصعود والنزول في مستواك حسب الاختيار والفترة</span></div><div class="chart-period-tabs" id="examChartPeriodTabs"><button type="button" data-chart-period="all" onclick="setExamChartPeriod('all')">كل الفترة</button><button type="button" data-chart-period="week" onclick="setExamChartPeriod('week')">أسبوع</button><button type="button" data-chart-period="month" onclick="setExamChartPeriod('month')">شهر</button><button type="button" data-chart-period="year" onclick="setExamChartPeriod('year')">سنة دراسية</button></div></div>
     <div class="chart-filter-scroller" id="examChartFilterTabs"></div>
     <div class="exam-chart-wrap"><canvas id="examProgressChart"></canvas></div><div id="examChartLegend" class="exam-chart-legend"></div>
   </div>
@@ -889,14 +890,26 @@ function loadData(){
     // Never silently discard the unreadable original. Preserve it separately
     // before allowing the app to start a fresh, valid data record.
     try{
-      const existing = localStorage.getItem(RECOVERY_RAW_KEY);
-      if(existing && existing !== raw) throw new Error('A different recovery copy already exists');
-      if(!existing) localStorage.setItem(RECOVERY_RAW_KEY, raw);
-      if(localStorage.getItem(RECOVERY_RAW_KEY) !== raw) throw new Error('Recovery copy verification failed');
-      storageRecoveryNotice = 'تعذر قراءة سجل البيانات القديم؛ تم الاحتفاظ بنسخة خام منه في مساحة التخزين قبل بدء سجل جديد.';
+      // Never replace a previous recovery copy. Keep a separate slot for each
+      // distinct unreadable record, and verify the exact bytes before continuing.
+      let recoveryKey = RECOVERY_RAW_KEY;
+      let slot = 1;
+      while(true){
+        const existing = localStorage.getItem(recoveryKey);
+        if(existing === raw) break;
+        if(existing === null){
+          localStorage.setItem(recoveryKey, raw);
+          if(localStorage.getItem(recoveryKey) !== raw) throw new Error('Recovery copy verification failed');
+          break;
+        }
+        slot += 1;
+        recoveryKey = RECOVERY_RAW_KEY + '_' + slot;
+        if(slot > 50) throw new Error('Too many recovery copies');
+      }
+      storageRecoveryNotice = 'تعذر قراءة سجل قديم؛ احتفظ التطبيق بنسخة خام آمنة منه قبل إنشاء سجل تشغيل جديد. لا تحذف بيانات التطبيق.';
     }catch(recoveryError){
       storageCanSave = false;
-      storageRecoveryNotice = 'تعذر قراءة سجل البيانات أو حفظ نسخة احتياطية منه. أوقفنا الكتابة لحماية البيانات الموجودة.';
+      storageRecoveryNotice = 'تعذر حفظ نسخة آمنة من سجل البيانات القديم؛ أوقفنا الكتابة لحماية البيانات الموجودة. صدّر أي نسخة احتياطية متاحة قبل المتابعة.';
       console.error('تعذر تأمين نسخة من بيانات غاية', recoveryError);
     }
     console.error('بيانات غاية المخزنة ليست JSON صالحًا؛ تم الاحتفاظ بها قبل الاسترداد.', error);
@@ -941,8 +954,8 @@ let monthAnchor = new Date();
 let yearAnchor = new Date();
 let examHistoryAnchor = new Date();
 let examStatsType = 'all';
-let examStatsPeriod = 'month';
-let examChartPeriod='month';
+let examStatsPeriod = 'all';
+let examChartPeriod='all';
 let examChartMetric='all_subjects';
 const EXAM_CHART_METRICS=[['all_subjects','كل المواد'],['overall','الإجمالي'],['weekly_total','إجمالي الأسبوعي'],['comprehensive_total','إجمالي الشوامل'],['comprehensive:رياضيات','شامل رياضيات'],['comprehensive:فيزياء','شامل فيزياء'],['comprehensive:كيمياء','شامل كيمياء'],['comprehensive:عربي','شامل عربي'],['comprehensive:إنجليزي','شامل إنجليزي'],['weekly:رياضيات','أسبوعي رياضيات'],['weekly:فيزياء','أسبوعي فيزياء'],['weekly:كيمياء','أسبوعي كيمياء'],['weekly:عربي','أسبوعي عربي'],['weekly:إنجليزي','أسبوعي إنجليزي']];
 function addPoints(category, amount){
@@ -2334,55 +2347,51 @@ function addExam(){
   const customSubject = document.getElementById('customSubject').value.trim();
   const subject = selectedSubject === '__custom__' ? customSubject : selectedSubject;
   const examDate = document.getElementById('examDate').value || todayStr();
-  const score = Number(document.getElementById('examScore').value);
-
-  if(!subject){
-    alert('اختار المادة الأول.');
-    return;
+  const scoreText = document.getElementById('examScore').value.trim();
+  const score = Number(scoreText);
+  if(!['weekly','comprehensive'].includes(type)){
+    alert('اختار نوع امتحان صحيح.'); return;
   }
-  if(!Number.isFinite(score) || score < 0 || score > 100){
-    alert('اكتب نسبة صحيحة من 0 لحد 100.');
-    return;
+  if(!subject){alert('اختار المادة الأول.');return;}
+  if(subject.length > 40){alert('اسم المادة طويل زيادة عن اللازم.');return;}
+  if(scoreText === '' || !Number.isFinite(score) || score < 0 || score > 100){
+    alert('اكتب نسبة صحيحة من 0 لحد 100.'); return;
   }
   if(!isValidDateString(examDate) || examDate > todayStr()){
-    document.getElementById('examDate').value = todayStr();
-    alert('اختار تاريخ امتحان صحيح، ومينفعش يكون في المستقبل.');
-    return;
+    const dateInput=document.getElementById('examDate');
+    dateInput.value=todayStr(); dateInput.max=todayStr();
+    alert('اختار تاريخ امتحان صحيح، ومينفعش يكون في المستقبل.'); return;
   }
-
-  if(!Array.isArray(data.exams)) data.exams = [];
-
+  if(!Array.isArray(data.exams)) data.exams=[];
   if(editingExamId !== null){
-    const exam = data.exams.find(e=>e.id===editingExamId);
-    if(exam){
-      exam.date = examDate;
-      exam.type = type;
-      exam.subject = subject;
-      exam.percentage = score;
+    const exam=data.exams.find(e=>e.id===editingExamId);
+    if(!exam){cancelExamEdit();return;}
+    const previousData = JSON.stringify(data);
+    Object.assign(exam,{date:examDate,type,subject,percentage:score});
+    recalculateRecordedPoints();
+    if(!saveData()){
+      data = JSON.parse(previousData);
+      alert('النتيجة لم تُحفظ لأن مساحة التخزين رفضت الكتابة. بياناتك القديمة لم تتغير؛ صدّر نسخة احتياطية أو افحص مساحة الجهاز.');
+      renderExams(); renderStats(); return;
     }
     cancelExamEdit();
-    recalculateRecordedPoints();
-    saveData();
-    renderExams();
-    renderPrediction();
-    showToast('اتعدّلت النتيجة ✅', 'motivation', false);
+    renderExams(); renderStats(); renderPrediction();
+    showToast('اتعدّلت النتيجة واتحفظت ✅','motivation',false);
     return;
   }
-
-  data.exams.push({
-    id: Date.now(),
-    date: examDate,
-    type,
-    subject,
-    percentage: score
-  });
+  const previousData = JSON.stringify(data);
+  const newExam={id:Date.now(),date:examDate,type,subject,percentage:score};
+  data.exams.push(newExam);
   recalculateRecordedPoints();
-  saveData();
+  if(!saveData()){
+    data = JSON.parse(previousData);
+    alert('النتيجة لم تُحفظ لأن مساحة التخزين رفضت الكتابة. لم نعرضها كأنها اتسجلت؛ صدّر نسخة احتياطية أو افحص مساحة الجهاز.');
+    renderExams(); renderStats(); return;
+  }
   clearExamForm();
-  renderExams();
-
-  const feedback = getExamFeedback(score);
-  showToast(randomExamMessage(feedback.messages), feedback.type, feedback.type === 'roast');
+  renderExams(); renderStats(); renderPrediction();
+  const feedback=getExamFeedback(score);
+  showToast(randomExamMessage(feedback.messages),feedback.type,feedback.type==='roast');
 }
 
 function editExam(id){
@@ -2463,20 +2472,30 @@ function setExamStatsType(type){
 }
 
 function setExamStatsPeriod(period){
-  if(!['week','month','year'].includes(period)) return;
+  if(!['all','week','month','year'].includes(period)) return;
   examStatsPeriod = period;
   renderExamStats();
 }
-
+function getCairoTodayDate(){
+  const parts = todayStr().split('-').map(Number);
+  return new Date(parts[0], parts[1]-1, parts[2]);
+}
 function getExamStatsPeriodRange(period){
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let end = new Date(start);
-
-  if(period === 'week'){
-    // الأسبوع الدراسي هنا من السبت إلى الجمعة.
-    const day = start.getDay(); // الأحد=0 ... السبت=6
-    const daysFromSaturday = (day + 1) % 7;
+  const now = getCairoTodayDate();
+  let start = new Date(now), end = new Date(now);
+  if(period === 'all'){
+    const dates = (Array.isArray(data.exams) ? data.exams : [])
+      .map(exam=>String(exam.date || ''))
+      .filter(isValidDateString)
+      .sort();
+    if(dates.length){
+      const first = dates[0].split('-').map(Number);
+      start = new Date(first[0], first[1]-1, first[2]);
+    }else{
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+  }else if(period === 'week'){
+    const daysFromSaturday = (now.getDay() + 1) % 7;
     start.setDate(start.getDate() - daysFromSaturday);
     end = new Date(start);
     end.setDate(start.getDate() + 6);
@@ -2484,94 +2503,101 @@ function getExamStatsPeriodRange(period){
     start.setDate(1);
     end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
   }else{
-    // "السنة" هنا = السنة الدراسية، مش السنة الميلادية.
-    // في العام الدراسي 2026/2027: من 1 أغسطس 2026 إلى 31 يوليو 2027.
-    const academicStartYear = now.getMonth() >= 7
-      ? now.getFullYear()
-      : now.getFullYear() - 1;
-    start.setFullYear(academicStartYear, 7, 1);
+    // السنة الدراسية الحالية تتحسب تلقائيًا بدل تثبيت سنة 2026/2027.
+    const academicStartYear = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+    start = new Date(academicStartYear, 7, 1);
     end = new Date(academicStartYear + 1, 7, 0);
   }
-
   return {start, end};
 }
-
 function examDateKeyFromDate(date){
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 }
-
 function formatStatsRange(start, end){
   const startText = `${start.getDate()} ${ARABIC_MONTHS[start.getMonth()]} ${start.getFullYear()}`;
   const endText = `${end.getDate()} ${ARABIC_MONTHS[end.getMonth()]} ${end.getFullYear()}`;
   return startText === endText ? startText : `${startText} — ${endText}`;
 }
-
 function renderExamStats(){
   const summaryEl = document.getElementById('examStatsSummary');
   const rangeEl = document.getElementById('examStatsRange');
   if(!summaryEl || !rangeEl) return;
-
   const {start, end} = getExamStatsPeriodRange(examStatsPeriod);
   const startKey = examDateKeyFromDate(start);
   const endKey = examDateKeyFromDate(end);
-
   const exams = (Array.isArray(data.exams) ? data.exams : []).filter(exam=>{
     if(examStatsType !== 'all' && exam.type !== examStatsType) return false;
     const dateKey = String(exam.date || '');
-    return dateKey >= startKey && dateKey <= endKey;
+    return isValidDateString(dateKey) && dateKey >= startKey && dateKey <= endKey;
   });
-
   const totals = {};
   exams.forEach(exam=>{
-    const subject = exam.subject;
+    const subject = String(exam.subject || '');
     if(!totals[subject]) totals[subject] = {sum:0,count:0};
     totals[subject].sum += Number(exam.percentage) || 0;
     totals[subject].count += 1;
   });
-
-  const averages = SUBJECTS.map(subject=>{
+  const subjectNames = [...SUBJECTS, ...Object.keys(totals).filter(subject=>!SUBJECTS.includes(subject)).sort((a,b)=>a.localeCompare(b,'ar'))];
+  const averages = subjectNames.map(subject=>{
     const item = totals[subject];
     return item && item.count ? item.sum / item.count : null;
   });
   const recorded = averages.filter(avg=>avg !== null);
-  const overall = recorded.length
-    ? recorded.reduce((a,b)=>a+b,0) / recorded.length
-    : null;
-
+  const overall = recorded.length ? recorded.reduce((a,b)=>a+b,0) / recorded.length : null;
   const formatPct = avg => avg === null ? '—' : (avg.toFixed(1).replace('.0','') + '%');
-  const typeLabel = examStatsType === 'weekly'
-    ? 'الامتحانات الأسبوعية'
-    : examStatsType === 'comprehensive'
-      ? 'الشوامل'
-      : 'كل الامتحانات';
-
-  rangeEl.textContent = `${typeLabel} · ${formatStatsRange(start,end)} · ${exams.length} امتحان`;
-
-  summaryEl.innerHTML = SUBJECTS.map((subject,i)=>`
-      <div class="point-box">
-        <div class="point-value">${formatPct(averages[i])}</div>
-        <div class="point-label">${escapeHtml(subject)}</div>
-      </div>`).join('') +
-    `<div class="point-box total">
-      <div class="point-value">${formatPct(overall)}</div>
-      <div class="point-label">الإجمالي</div>
-    </div>`;
-
-  document.querySelectorAll('#examStatsTypeTabs button').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.statsType === examStatsType);
-  });
-  document.querySelectorAll('#examStatsPeriodTabs button').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.statsPeriod === examStatsPeriod);
-  });
+  const typeLabel = examStatsType === 'weekly' ? 'الامتحانات الأسبوعية' : examStatsType === 'comprehensive' ? 'الشوامل' : 'كل الامتحانات';
+  const periodLabel = examStatsPeriod === 'all' ? 'كل النتائج المسجلة' : formatStatsRange(start,end);
+  rangeEl.textContent = `${typeLabel} · ${periodLabel} · ${exams.length} امتحان`;
+  summaryEl.innerHTML = subjectNames.map((subject,i)=>`
+      <div class="point-box"><div class="point-value">${formatPct(averages[i])}</div><div class="point-label">${escapeHtml(subject)}</div></div>`).join('') +
+    `<div class="point-box total"><div class="point-value">${formatPct(overall)}</div><div class="point-label">الإجمالي</div></div>`;
+  document.querySelectorAll('#examStatsTypeTabs button').forEach(btn=>btn.classList.toggle('active', btn.dataset.statsType === examStatsType));
+  document.querySelectorAll('#examStatsPeriodTabs button').forEach(btn=>btn.classList.toggle('active', btn.dataset.statsPeriod === examStatsPeriod));
 }
-
-function setExamChartPeriod(period){if(!['week','month','year'].includes(period))return;examChartPeriod=period;renderExamChart();}
-function setExamChartMetric(metric){if(!EXAM_CHART_METRICS.some(x=>x[0]===metric))return;examChartMetric=metric;renderExamChart();}
-function examChartRange(period){if(period==='year')return{start:new Date(2026,7,1),end:new Date(2027,6,31)};const now=new Date();if(period==='week'){const start=new Date(now.getFullYear(),now.getMonth(),now.getDate());start.setDate(start.getDate()-((start.getDay()+1)%7));return{start,end:new Date(start.getFullYear(),start.getMonth(),start.getDate()+6)};}const start=new Date(now.getFullYear(),now.getMonth(),1);return{start,end:new Date(now.getFullYear(),now.getMonth()+1,0)};}
-function examChartBucketKey(d,p){return p==='year'?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function examChartLabels(start,end,p){const a=[],d=new Date(start);if(p==='year'){while(d<=end){a.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}}else{while(d<=end){a.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);d.setDate(d.getDate()+1);}}return a;}
+function setExamChartPeriod(period){
+  if(!['all','week','month','year'].includes(period)) return;
+  examChartPeriod = period;
+  renderExamChart();
+}
+function setExamChartMetric(metric){
+  if(!EXAM_CHART_METRICS.some(x=>x[0]===metric)) return;
+  examChartMetric = metric;
+  renderExamChart();
+}
+function examChartRange(period){
+  const now = getCairoTodayDate();
+  if(period === 'all'){
+    const dates = (Array.isArray(data.exams) ? data.exams : []).map(e=>String(e.date||'')).filter(isValidDateString).sort();
+    const start = dates.length ? (()=>{const p=dates[0].split('-').map(Number);return new Date(p[0],p[1]-1,1);})() : new Date(now.getFullYear(),now.getMonth(),1);
+    return {start, end:new Date(now.getFullYear(),now.getMonth()+1,0)};
+  }
+  if(period === 'year'){
+    const academicStartYear = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear()-1;
+    return {start:new Date(academicStartYear,7,1),end:new Date(academicStartYear+1,7,0)};
+  }
+  if(period === 'week'){
+    const start = new Date(now);
+    start.setDate(start.getDate()-((start.getDay()+1)%7));
+    return {start,end:new Date(start.getFullYear(),start.getMonth(),start.getDate()+6)};
+  }
+  const start = new Date(now.getFullYear(),now.getMonth(),1);
+  return {start,end:new Date(now.getFullYear(),now.getMonth()+1,0)};
+}
+function examChartBucketKey(d,p){
+  return (p==='year' || p==='all') ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function examChartLabels(start,end,p){
+  const a=[],d=new Date(start);
+  if(p==='year' || p==='all'){
+    d.setDate(1);
+    while(d<=end){a.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}
+  }else{
+    while(d<=end){a.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);d.setDate(d.getDate()+1);}
+  }
+  return a;
+}
 function metricExamMatches(e,m){if(m==='all_subjects'||m==='overall')return true;if(m==='weekly_total')return e.type==='weekly';if(m==='comprehensive_total')return e.type==='comprehensive';const [t,s]=m.split(':');return e.type===t&&e.subject===s;}
-function renderExamChart(){const c=document.getElementById('examProgressChart'),f=document.getElementById('examChartFilterTabs'),l=document.getElementById('examChartLegend');if(!c||!f||!l)return;if(!f.dataset.ready){f.innerHTML=EXAM_CHART_METRICS.map(([id,label])=>`<button type="button" data-chart-metric="${id}">${label}</button>`).join('');f.querySelectorAll('[data-chart-metric]').forEach(b=>b.addEventListener('click',()=>setExamChartMetric(b.dataset.chartMetric)));f.dataset.ready='1';}f.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.chartMetric===examChartMetric));document.querySelectorAll('#examChartPeriodTabs button').forEach(b=>b.classList.toggle('active',b.dataset.chartPeriod===examChartPeriod));const r=c.getBoundingClientRect(),dpr=Math.max(1,Math.min(2,devicePixelRatio||1)),w=Math.max(300,Math.floor(r.width)),h=Math.max(180,Math.floor(r.height));c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);const {start,end}=examChartRange(examChartPeriod),labels=examChartLabels(start,end,examChartPeriod),exams=(Array.isArray(data.exams)?data.exams:[]).filter(e=>{const q=parseDateKey(e.date);if(!q)return false;const z=new Date(q.year,q.month,q.day);return z>=start&&z<=end;});const colors=['#2C67C5','#5C9BE8','#8BB9F0','#B8D4F7','#F5B942'];const ds=examChartMetric==='all_subjects'?SUBJECTS.map((s,i)=>({label:s,color:colors[i],exams:exams.filter(e=>e.subject===s)})):[{label:(EXAM_CHART_METRICS.find(a=>a[0]===examChartMetric)||[])[1]||'',color:'#2C67C5',exams:exams.filter(e=>metricExamMatches(e,examChartMetric))}];const series=ds.map(d=>{const b=labels.map(()=>[]);d.exams.forEach(e=>{const q=parseDateKey(e.date);if(!q)return;const i=labels.indexOf(examChartBucketKey(new Date(q.year,q.month,q.day),examChartPeriod));if(i>=0)b[i].push(Number(e.percentage));});return{...d,values:b.map(v=>v.length?v.reduce((a,b)=>a+b,0)/v.length:null)};});const pad={l:38,r:12,t:16,b:28},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,xa=i=>labels.length===1?pad.l+cw/2:pad.l+(i/(labels.length-1))*cw;x.font='9px Arial';x.fillStyle='#78879D';x.textAlign='right';x.strokeStyle='rgba(255,255,255,.07)';[0,25,50,75,100].forEach(v=>{const y=pad.t+ch-(v/100)*ch;x.beginPath();x.moveTo(pad.l,y);x.lineTo(w-pad.r,y);x.stroke();x.fillText(v+'%',pad.l-5,y+3);});x.textAlign='center';const step=labels.length>12?Math.ceil(labels.length/7):1;labels.forEach((k,i)=>{if(i%step)return;const t=examChartPeriod==='year'?ARABIC_MONTHS[Number(k.slice(5,7))-1]:k.slice(8,10);x.fillText(t||k,xa(i),h-8);});series.forEach(d=>{let st=false;x.beginPath();d.values.forEach((v,i)=>{if(v===null){st=false;return;}const px=xa(i),py=pad.t+ch-(v/100)*ch;if(!st){x.moveTo(px,py);st=true;}else x.lineTo(px,py);});x.strokeStyle=d.color;x.lineWidth=2.5;x.lineJoin='round';x.lineCap='round';x.stroke();d.values.forEach((v,i)=>{if(v===null)return;const px=xa(i),py=pad.t+ch-(v/100)*ch;x.beginPath();x.arc(px,py,3,0,Math.PI*2);x.fillStyle=d.color;x.fill();});});l.innerHTML=series.map(d=>`<span class="chart-legend-item"><i class="chart-legend-dot" style="background:${d.color}"></i>${escapeHtml(d.label)}</span>`).join('');if(!series.some(d=>d.values.some(v=>v!==null))){x.fillStyle='#78879D';x.font='12px Arial';x.textAlign='center';x.fillText('لسه مفيش نتائج في الفترة دي',w/2,h/2);}}
+function renderExamChart(){const c=document.getElementById('examProgressChart'),f=document.getElementById('examChartFilterTabs'),l=document.getElementById('examChartLegend');if(!c||!f||!l)return;if(!f.dataset.ready){f.innerHTML=EXAM_CHART_METRICS.map(([id,label])=>`<button type="button" data-chart-metric="${id}">${label}</button>`).join('');f.querySelectorAll('[data-chart-metric]').forEach(b=>b.addEventListener('click',()=>setExamChartMetric(b.dataset.chartMetric)));f.dataset.ready='1';}f.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.chartMetric===examChartMetric));document.querySelectorAll('#examChartPeriodTabs button').forEach(b=>b.classList.toggle('active',b.dataset.chartPeriod===examChartPeriod));const r=c.getBoundingClientRect(),dpr=Math.max(1,Math.min(2,devicePixelRatio||1)),w=Math.max(300,Math.floor(r.width)),h=Math.max(180,Math.floor(r.height));c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');if(!x){l.textContent='الرسم البياني غير مدعوم على هذا الإصدار، لكن سجل النتائج والإحصائيات متاحان.';return;}x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);const {start,end}=examChartRange(examChartPeriod),labels=examChartLabels(start,end,examChartPeriod),exams=(Array.isArray(data.exams)?data.exams:[]).filter(e=>{const q=parseDateKey(e.date);if(!q)return false;const z=new Date(q.year,q.month,q.day);return z>=start&&z<=end;});const colors=['#2C67C5','#5C9BE8','#8BB9F0','#B8D4F7','#F5B942'];const chartSubjects=[...SUBJECTS,...new Set(exams.map(e=>String(e.subject||'')).filter(s=>s&&!SUBJECTS.includes(s)))];const ds=examChartMetric==='all_subjects'?chartSubjects.map((s,i)=>({label:s,color:colors[i%colors.length],exams:exams.filter(e=>e.subject===s)})):[{label:(EXAM_CHART_METRICS.find(a=>a[0]===examChartMetric)||[])[1]||'',color:'#2C67C5',exams:exams.filter(e=>metricExamMatches(e,examChartMetric))}];const series=ds.map(d=>{const b=labels.map(()=>[]);d.exams.forEach(e=>{const q=parseDateKey(e.date);if(!q)return;const i=labels.indexOf(examChartBucketKey(new Date(q.year,q.month,q.day),examChartPeriod));if(i>=0)b[i].push(Number(e.percentage));});return{...d,values:b.map(v=>v.length?v.reduce((a,b)=>a+b,0)/v.length:null)};});const pad={l:38,r:12,t:16,b:28},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,xa=i=>labels.length===1?pad.l+cw/2:pad.l+(i/(labels.length-1))*cw;x.font='9px Arial';x.fillStyle='#78879D';x.textAlign='right';x.strokeStyle='rgba(255,255,255,.07)';[0,25,50,75,100].forEach(v=>{const y=pad.t+ch-(v/100)*ch;x.beginPath();x.moveTo(pad.l,y);x.lineTo(w-pad.r,y);x.stroke();x.fillText(v+'%',pad.l-5,y+3);});x.textAlign='center';const step=labels.length>12?Math.ceil(labels.length/7):1;labels.forEach((k,i)=>{if(i%step)return;const t=(examChartPeriod==='year'||examChartPeriod==='all')?ARABIC_MONTHS[Number(k.slice(5,7))-1]:k.slice(8,10);x.fillText(t||k,xa(i),h-8);});series.forEach(d=>{let st=false;x.beginPath();d.values.forEach((v,i)=>{if(v===null){st=false;return;}const px=xa(i),py=pad.t+ch-(v/100)*ch;if(!st){x.moveTo(px,py);st=true;}else x.lineTo(px,py);});x.strokeStyle=d.color;x.lineWidth=2.5;x.lineJoin='round';x.lineCap='round';x.stroke();d.values.forEach((v,i)=>{if(v===null)return;const px=xa(i),py=pad.t+ch-(v/100)*ch;x.beginPath();x.arc(px,py,3,0,Math.PI*2);x.fillStyle=d.color;x.fill();});});l.innerHTML=series.map(d=>`<span class="chart-legend-item"><i class="chart-legend-dot" style="background:${d.color}"></i>${escapeHtml(d.label)}</span>`).join('');if(!series.some(d=>d.values.some(v=>v!==null))){x.fillStyle='#78879D';x.font='12px Arial';x.textAlign='center';x.fillText('لسه مفيش نتائج في الفترة دي',w/2,h/2);}}
 function renderAllExamRecords(){const el=document.getElementById('allExamRecords');if(!el)return;const a=[...(Array.isArray(data.exams)?data.exams:[])].sort((x,y)=>String(y.date||'').localeCompare(String(x.date||''))||Number(y.id||0)-Number(x.id||0));el.innerHTML=a.length?a.map(e=>`<div class="all-exam-record"><div class="all-exam-main"><div class="all-exam-title">${escapeHtml(e.subject||'مادة غير محددة')} — ${escapeHtml(examTypeLabel(e.type))}</div><div class="all-exam-meta">${escapeHtml(formatExamDate(String(e.date||'')))}</div></div><div class="all-exam-score">${Number(e.percentage).toFixed(1).replace('.0','')}%</div></div>`).join(''):'<div class="all-exam-empty">لسه مفيش امتحانات متسجلة.</div>';}
 window.addEventListener('resize',()=>{if(document.getElementById('page-stats')?.classList.contains('active') || document.getElementById('page-exams')?.classList.contains('active'))renderExamChart();});
 
@@ -2586,7 +2612,8 @@ function renderExams(){
   });
 
   const totalsEl = document.getElementById('allTimeSubjectTotals');
-  const subjectAverages = SUBJECTS.map(subject=>{
+  const subjectNames = [...SUBJECTS, ...Object.keys(allTimeTotals).filter(subject=>!SUBJECTS.includes(subject)).sort((a,b)=>a.localeCompare(b,'ar'))];
+  const subjectAverages = subjectNames.map(subject=>{
     const item = allTimeTotals[subject];
     return item && item.count > 0 ? (item.sum / item.count) : null;
   });
@@ -2596,7 +2623,7 @@ function renderExams(){
     : null;
   const formatPct = avg => avg === null ? '—' : (avg.toFixed(1).replace('.0','') + '%');
 
-  totalsEl.innerHTML = SUBJECTS.map((subject,i) => `
+  totalsEl.innerHTML = subjectNames.map((subject,i) => `
       <div class="point-box">
         <div class="point-value">${formatPct(subjectAverages[i])}</div>
         <div class="point-label">${escapeHtml(subject)}</div>
@@ -3092,10 +3119,11 @@ function shiftStats(dir){
   renderStats();
 }
 function renderStats(){
-  renderPointBreakdown();
-  renderExamStats();
-  renderExamChart();
-  renderAllExamRecords();
+  // Each panel is isolated: a canvas/chart issue must never hide exam grades or logs.
+  try{renderPointBreakdown();}catch(error){console.error('تعذر عرض توزيع النقاط',error);}
+  try{renderExamStats();}catch(error){console.error('تعذر عرض ملخص درجات الامتحانات',error);}
+  try{renderExamChart();}catch(error){console.error('تعذر عرض الرسم البياني',error);}
+  try{renderAllExamRecords();}catch(error){console.error('تعذر عرض سجل الامتحانات',error);}
   const label = document.getElementById('statsRangeLabel');
   const nextBtn = document.getElementById('statsNextBtn');
   if(currentRange==='week'){
@@ -3202,8 +3230,13 @@ function resetData(event){
 function exportBackup(){
   const backupData = {...data};
   try{
-    const recoveryRaw = localStorage.getItem(RECOVERY_RAW_KEY);
-    if(recoveryRaw) backupData.__ghayah_recovery_raw = recoveryRaw;
+    const recoveryCopies = {};
+    for(let i=1;i<=50;i++){
+      const key = i===1 ? RECOVERY_RAW_KEY : RECOVERY_RAW_KEY + '_' + i;
+      const value = localStorage.getItem(key);
+      if(value !== null) recoveryCopies[key] = value;
+    }
+    if(Object.keys(recoveryCopies).length) backupData.__ghayah_recovery_raw_copies = recoveryCopies;
   }catch(error){}
   const blob = new Blob([JSON.stringify(backupData, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
