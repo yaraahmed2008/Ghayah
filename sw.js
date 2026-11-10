@@ -1,7 +1,7 @@
 /* Ghayah service worker — network-first updates with offline fallback.
    Optional font/icon files are cached only when successfully requested, so a
    missing optional asset cannot break the service-worker installation. */
-const CACHE_NAME = 'ghayah-app-v5-stats-all';
+const CACHE_NAME = 'ghayah-app-v8-coach27';
 const APP_SHELL = ['./', './index.html', './fonts.css', './manifest.json'];
 
 self.addEventListener('install', (event) => {
